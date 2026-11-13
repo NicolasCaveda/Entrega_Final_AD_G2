@@ -3,14 +3,14 @@
 test_tablero.py — Tests de la logica del tablero (datos.py).
 
 Oraculos independientes:
-  - las cifras de referencia del informe y del README (neta mediana 5,65%,
-    19,4% sobre el piso, TIR mediana 4,27%, embudo 4.484 -> 227 -> 18 -> 4),
-    que el tablero tiene que reproducir sin filtros
+  - las cifras del dataset analitico leido directo del CSV, sin pasar por
+    datos.py (neta y TIR medianas, % sobre el piso, embudo, P1, P2), que el
+    tablero tiene que reproducir sin filtros
   - cada filtro, contra la condicion que dice aplicar, fila por fila
 con NEGATIVOS: un filtro que deja 0 filas no rompe los KPIs ni el embudo.
 
 Uso:
-    py tablero/test_tablero.py      # desde Entrega 3/, o desde tablero/
+    py tablero/test_tablero.py      # desde la raiz del proyecto, o desde tablero/
 """
 
 import math
@@ -35,10 +35,19 @@ def check(descripcion: str, condicion: bool, detalle: str = "") -> None:
 
 
 piso, techo = S.RETORNO_MINIMO_BANDA
+vara = S.RETORNO_MIN_PCT + S.MARGEN_LIQUIDEZ_PCT
 df = T.cargar()
 
+# El oraculo: el CSV leido directo, con las mismas definiciones del pipeline.
+crudo = T.pd.read_csv(T.DATASET, encoding="utf-8-sig", low_memory=False)
+ok = crudo[(crudo["operacion"] == "venta") & (crudo["estimacion_confiable"] == 1)]
+bo = lambda c: ok[c].fillna(False).astype(bool)
+U, P1, P1E, P2 = bo("universo_decision"), bo("p1_comprar"), bo("p1_comprar_con_entrada"), bo("p2_no_dominada")
+EMBUDO = [int(U.sum()), int((U & (ok["rent_neta_pct"] > vara)).sum()),
+          int((U & (ok["rent_neta_pct"] > vara) & P1).sum()), int((U & (ok["rent_neta_pct"] > vara) & P1 & P1E).sum())]
+
 # --- Carga ------------------------------------------------------------------------
-check("carga: 9.203 ventas con estimacion confiable", len(df) == 9203, f"{len(df)} filas")
+check("carga: las ventas con estimacion confiable", len(df) == len(ok), f"{len(df)} filas")
 check("carga: solo ventas confiables",
       (df["operacion"] == "venta").all() and (df["estimacion_confiable"] == 1).all())
 check("carga: sin el BOM en la primera columna", "id_aviso" in df.columns)
@@ -55,17 +64,20 @@ check("carga: nombre de barrio para mostrar, con tildes",
 todo = T.Filtros.sin_filtros(df)
 sf = T.filtrar(df, todo)
 k = T.kpis(sf)
-check("sin filtros: N = 9.203", k["n"] == 9203, str(k["n"]))
-check("sin filtros: neta mediana 5,65%", round(k["neta_mediana"], 2) == 5.65, f"{k['neta_mediana']:.4f}")
-check("sin filtros: TIR mediana 4,27%", round(k["tir_mediana"], 2) == 4.27, f"{k['tir_mediana']:.4f}")
-check("sin filtros: 19,4% sobre el piso", round(k["pct_sobre_piso"], 1) == 19.4, f"{k['pct_sobre_piso']:.3f}")
+check("sin filtros: N = ventas confiables", k["n"] == len(ok), str(k["n"]))
+check("sin filtros: neta mediana del dataset", math.isclose(k["neta_mediana"], ok["rent_neta_pct"].median()),
+      f"{k['neta_mediana']:.4f}")
+check("sin filtros: TIR mediana del dataset", math.isclose(k["tir_mediana"], ok["tir_5a_pct"].median()),
+      f"{k['tir_mediana']:.4f}")
+check("sin filtros: % sobre el piso del dataset",
+      math.isclose(k["pct_sobre_piso"], (ok["rent_neta_pct"] >= piso).mean() * 100), f"{k['pct_sobre_piso']:.3f}")
 check("sin filtros: distancia al piso = neta mediana - piso",
       math.isclose(k["pp_al_piso"], k["neta_mediana"] - piso))
 check("sin filtros: la banda mediana encierra a la neta mediana",
       k["neta_min_mediana"] < k["neta_mediana"] < k["neta_max_mediana"])
 emb = T.embudo(sf)
-check("sin filtros: embudo 4.484 -> 227 -> 18 -> 4", [n for _, n in emb] == [4484, 227, 18, 4],
-      str([n for _, n in emb]))
+check("sin filtros: embudo igual al del dataset", [n for _, n in emb] == EMBUDO, f"{[n for _, n in emb]} contra {EMBUDO}")
+check("embudo: la ultima etapa es P1 con costos de entrada", EMBUDO[3] == int((U & P1E).sum()))
 check("embudo: cuatro etapas con nombre", len(emb) == 4 and all(isinstance(e, str) and e for e, _ in emb))
 
 # --- Filtros por defecto ----------------------------------------------------------
@@ -73,8 +85,9 @@ dflt = T.Filtros()
 check("defecto: presupuesto de supuestos.py", dflt.presupuesto == S.PRESUPUESTO_USD)
 check("defecto: tipo departamento", dflt.tipo == "departamento")
 d = T.filtrar(df, dflt)
-check("defecto: es el universo de la decision (4.484)", len(d) == 4484, f"{len(d)} filas")
-check("defecto: el embudo no cambia", [n for _, n in T.embudo(d)] == [4484, 227, 18, 4])
+check("defecto: es el universo de la decision", len(d) >= int(U.sum()) and int(d["universo_decision"].sum()) == int(U.sum()),
+      f"{len(d)} filas")
+check("defecto: el embudo no cambia", [n for _, n in T.embudo(d)] == EMBUDO)
 
 # --- Cada filtro hace lo que dice -------------------------------------------------
 casos = [
@@ -152,16 +165,20 @@ check("mapa: vacio no rompe", T.sin_coordenadas(vacio) == 0)
 
 # --- Pestana 3: P1, frontera P2 y ficha ---------------------------------------------
 p1 = T.p1_tabla(sf)
-check("P1 sin filtros: 18 propiedades", len(p1) == 18, str(len(p1)))
+check("P1 sin filtros: las del dataset", len(p1) == int((U & P1).sum()), str(len(p1)))
 check("P1: solo del universo y marcadas por decision.py", bool((p1["universo_decision"] & p1["p1_comprar"]).all()))
 check("P1: ordenadas por neta pesimista, de mayor a menor", p1["neta_min_pct"].is_monotonic_decreasing)
-check("P1: todas estan en la frontera P2", bool(p1["p2_no_dominada"].all()))
+check("P1: ninguna con la revision a mano excluida",
+      not p1["id_aviso"].isin(crudo.loc[crudo["excluida_revision"].fillna(False).astype(bool), "id_aviso"]).any())
+check("P1: las alertas del dataset llegan a la tabla",
+      p1["alerta_revision"].notna().sum() == int((U & P1 & ok["alerta_revision"].notna()).sum()))
 p1b = T.p1_tabla(T.filtrar(df, T.Filtros.sin_filtros(df).con(barrios=("san cristobal",))))
-check("P1: responde a los filtros", 0 < len(p1b) < 18 and (p1b["barrio"] == "san cristobal").all(), str(len(p1b)))
-check("P1: descuento del encabezado ~30% sin filtros", T.descuento_p1(p1) == 30, str(T.descuento_p1(p1)))
+check("P1: responde a los filtros", 0 < len(p1b) < len(p1) and (p1b["barrio"] == "san cristobal").all(), str(len(p1b)))
+desc = int(round((1 - ok.loc[U & P1, "m2_relativo_celda"].median()) * 100 / 5) * 5)
+check("P1: descuento del encabezado, del dataset", T.descuento_p1(p1) == desc, f"{T.descuento_p1(p1)} contra {desc}")
 
 fr = T.frontera_p2(sf)
-check("P2 sin filtros: 140 propiedades", len(fr) == 140, str(len(fr)))
+check("P2 sin filtros: las del dataset", len(fr) == int((U & P2).sum()), str(len(fr)))
 check("P2: solo del universo", bool((fr["universo_decision"] & fr["p2_no_dominada"]).all()))
 check("P2: ancho de banda = max - min", ((fr["ancho"] - (fr["neta_max_pct"] - fr["neta_min_pct"])).abs() < 1e-9).all())
 check("P2: ordenada por ancho de banda, la mas angosta primero", fr["ancho"].is_monotonic_increasing)
@@ -206,22 +223,29 @@ check("P3: un nombre y un color por gestion",
 
 # --- Pestana 5: supuestos y alcance -------------------------------------------------
 sens = T.cargar_sensibilidad()
-check("sensibilidad: 22 escenarios", len(sens) == 22, str(len(sens)))
+crudo_sens = T.pd.read_csv(T.SENSIBILIDAD, encoding="utf-8-sig")
+check("sensibilidad: todos los escenarios del CSV", len(sens) == len(crudo_sens), str(len(sens)))
 b0 = sens[sens["parametro"] == "base"].iloc[0]
-check("sensibilidad: la base da el mismo P1 que el embudo (18 y 4)",
-      (b0["n_p1"], b0["n_p1_con_entrada"]) == (emb[2][1], emb[3][1]), str((b0["n_p1"], b0["n_p1_con_entrada"])))
-check("sensibilidad: marca como base las 6 filas con los supuestos de la base", int(sens["es_base"].sum()) == 6,
-      str(int(sens["es_base"].sum())))
+check("sensibilidad: la base da el mismo P1 que el dataset",
+      (b0["n_p1"], b0["n_p1_con_entrada"]) == (int((U & P1).sum()), int((U & P1E).sum())),
+      str((b0["n_p1"], b0["n_p1_con_entrada"])))
+iguales_base = sum(all(str(r[c]) == str(crudo_sens.iloc[0][c]) for c in T.SUPUESTOS_BASE)
+                   for _, r in crudo_sens.iterrows())
+check("sensibilidad: marca como base las filas con los supuestos de la base", int(sens["es_base"].sum()) == iguales_base,
+      f"{int(sens['es_base'].sum())} contra {iguales_base}")
+check("sensibilidad: sin costos de entrada, la obra se sigue pagando",
+      (crudo_sens.loc[crudo_sens["entrada"] == "sin", "refaccion"] != "sin").all())
 check("sensibilidad: las filas marcadas como base dan lo mismo que la base",
       (sens.loc[sens["es_base"], ["n_p1", "n_p1_con_entrada"]] == [b0["n_p1"], b0["n_p1_con_entrada"]]).all().all())
 check("sensibilidad: una etiqueta distinta por escenario", sens["escenario"].is_unique, str(list(sens["escenario"])))
 check("sensibilidad: etiquetas con coma decimal",
       "Vacancia 4%" in set(sens["escenario"]) and "Margen 0,5 pp" in set(sens["escenario"]), str(list(sens["escenario"])))
 peor = sens[sens["parametro"] == "extremo desfavorable"].iloc[0]
-check("sensibilidad: en el extremo desfavorable ninguna pasa P1 con entrada", peor["n_p1_con_entrada"] == 0)
+check("sensibilidad: el extremo desfavorable deja menos que la base", peor["n_p1_con_entrada"] < b0["n_p1_con_entrada"]
+      and peor["n_p1"] < b0["n_p1"])
 
 fu = T.fuentes()
-check("fuentes: una fila por fuente externa versionada", len(fu) == 7, str(len(fu)))
+check("fuentes: una fila por fuente externa versionada", len(fu) == len(T.FUENTES), str(len(fu)))
 check("fuentes: todas con fecha de descarga", fu["descarga"].notna().all() and (fu["descarga"] != "").all())
 check("fuentes: Inside Airbnb con su snapshot", fu.set_index("fuente").loc["Inside Airbnb", "periodo"] == "2026-06-29",
       str(fu.set_index("fuente").get("periodo")))

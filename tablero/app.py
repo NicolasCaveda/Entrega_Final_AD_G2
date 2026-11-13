@@ -22,6 +22,7 @@ import eda
 import supuestos as S
 
 PISO, TECHO = S.RETORNO_MINIMO_BANDA
+VARA = S.RETORNO_MIN_PCT + S.MARGEN_LIQUIDEZ_PCT
 C = T.COLORES
 TODOS = "todos"            # None en un selectbox es "sin eleccion"; por eso un valor propio
 MIN_CONFIABLE = 30          # menos propiedades: la mediana es poco confiable
@@ -52,6 +53,12 @@ def cargar_ranking():
 def num(x: float, dec: int = 0) -> str:
     """Formato argentino: punto de miles, coma decimal."""
     return f"{x:,.{dec}f}".replace(",", "_").replace(".", ",").replace("_", ".")
+
+
+def fecha_ar(iso: str) -> str:
+    """2026-11-13 -> 13-11-2026."""
+    a, m, d = str(iso)[:10].split("-")
+    return f"{d}-{m}-{a}"
 
 
 def pct(x: float, dec: int = 2) -> str:
@@ -171,9 +178,11 @@ with st.sidebar:
     st.segmented_control("Métrica", list(METRICAS), key="metrica", required=True, width="stretch")
     st.button("Restablecer filtros", icon=":material/restart_alt:", on_click=restablecer, width="stretch")
     st.html(f'<div class="banda-clave"><div class="banda-titulo"><span class="banda-muestra"></span>'
-            f'Banda de retorno mínimo</div><div class="banda-valor">{pct(PISO)} – {pct(TECHO)} anual en USD</div>'
-            '<div class="banda-nota">ON de YPF 2031 y Pampa 2037. Es la vara fija de todos los gráficos, '
-            'no un filtro.</div></div>')
+            f'Retorno mínimo</div><div class="banda-valor">{pct(VARA)} anual en USD</div>'
+            f'<div class="banda-nota">TIR de las ON corporativas en dólares que vencen en {S.HORIZONTE_ANIOS - 1} a '
+            f'{S.HORIZONTE_ANIOS + 1} años, el horizonte del inversor (precios del {fecha_ar(S.CURVA_ON_FECHA)}). '
+            f'La banda va de {pct(PISO)} a {pct(TECHO)} (p25 a p75 de esas ON). Es la vara fija de todos los '
+            'gráficos, no un filtro.</div></div>')
 
 ss = st.session_state
 filtros = T.Filtros(presupuesto=tuple(sorted((ss["desde"], ss["hasta"]))),
@@ -394,8 +403,8 @@ def histograma(v, columna: str) -> go.Figure:
     return estilo(fig)
 
 
-ETAPAS = ["Universo de la decisión", "Neta central sobre el techo", "P1 · pesimista sobre el techo",
-          "TIR pesimista sobre el techo"]
+ETAPAS = ["Universo de la decisión", "Neta central sobre la vara", "P1 · pesimista sobre la vara",
+          "TIR pesimista sobre la vara"]
 
 
 def etapas_html(etapas) -> str:
@@ -682,7 +691,9 @@ def ficha_html(f) -> str:
         ("Publicación típica (Ciudad)", f"{num(f['dias_publicacion_ambientes'])} días"),
     ]
     cuerpo = "".join(f"<div><dt>{k}</dt><dd>{v}</dd></div>" for k, v in datos)
-    return (
+    alerta = (f'<div class="aviso" style="margin: 0 0 8px">{ALERTA}<span><b>A verificar:</b> '
+              f'{e(str(f["alerta_revision"]))}</span></div>') if isinstance(f["alerta_revision"], str) else ""
+    return (alerta +
         f'<div class="ficha-cab"><div><p class="ficha-titulo">{e(str(f["titulo"]))}</p>'
         f'<span class="nota">{e(f["barrio_nombre"])}{ambientes}</span></div>'
         f'<a class="ficha-boton" href="{e(str(f["url"]), quote=True)}" target="_blank" rel="noopener" '
@@ -839,7 +850,8 @@ with tab1:
                         help=f"Cada barra cuenta propiedades por su {etiqueta.split(' (')[0].lower()} "
                              "central; la de cada una es una banda, no un número. La franja amarilla "
                              f"es la banda de retorno mínimo, {pct(PISO)} a {pct(TECHO)}: lo que paga "
-                             "la renta fija en dólares (ON de YPF 2031 y Pampa 2037).")
+                             f"la renta fija en dólares al plazo del inversor (ON que vencen en "
+                             f"{S.HORIZONTE_ANIOS - 1} a {S.HORIZONTE_ANIOS + 1} años; mediana {pct(VARA)}).")
             st.plotly_chart(histograma(vista, columna), width="stretch", config=SIN_BARRA)
         with g2, st.container(border=True, key="tarjeta_etapas"):
             if sin_soporte:
@@ -848,9 +860,9 @@ with tab1:
             else:
                 st.markdown("**¿Cuántas pasan cada vara?**",
                             help="Solo departamentos dentro del presupuesto y del soporte del modelo. "
-                                 "Universo → neta central sobre el techo de la banda → neta pesimista "
-                                 "sobre el techo (P1) → TIR pesimista, con costos de entrada, sobre "
-                                 "el techo. El porcentaje es sobre el universo.")
+                                 f"Universo → neta central sobre la vara ({pct(VARA)}) → neta pesimista "
+                                 "sobre la vara (P1) → TIR pesimista, con costos de entrada, sobre "
+                                 "la vara. El porcentaje es sobre el universo.")
                 st.html(etapas_html(T.embudo(vista)) +
                         f'<div class="aviso">{ALERTA}<span>Las que pasan P1 no son una recomendación: '
                         'hay que verificar por qué son baratas.</span></div>')
@@ -922,9 +934,10 @@ with tab3:
         with der:
             with st.container(border=True, key="tarjeta_p1"):
                 st.markdown(f"**A verificar (P1) · {num(len(p1))}**",
-                            help=f"Departamentos del universo cuya neta pesimista supera el techo de la "
-                                 f"banda ({pct(TECHO)}). No es una recomendación de compra. Clic en una "
-                                 "fila para ver su ficha.")
+                            help=f"Departamentos del universo cuya neta pesimista supera la TIR de las ON "
+                                 f"a {S.HORIZONTE_ANIOS} años ({pct(VARA)}). No es una recomendación de compra. "
+                                 "Los avisos se leyeron a mano: los de uso mixto u oficina ya no están, y los "
+                                 "que tienen algo que verificar llevan ⚠. Clic en una fila para ver su ficha.")
                 if p1.empty:
                     st.info("Ninguna propiedad pasa P1 con estos filtros.")
                 else:
@@ -938,6 +951,7 @@ with tab3:
                         "Neta pes.": p1["neta_min_pct"],
                         "vs. celda": (p1["m2_relativo_celda"] - 1) * 100,
                         "Con entrada": p1["p1_comprar_con_entrada"],
+                        "⚠": p1["alerta_revision"].notna().map({True: "⚠", False: ""}),
                         "Aviso": p1["url"],
                     })
                     # Los valores quedan numericos para que la tabla ordene por numero; el Styler
@@ -957,9 +971,11 @@ with tab3:
                                      "vs. celda": st.column_config.NumberColumn(width=62,
                                          help="Precio del m² contra el mediano de su barrio y tramo de "
                                               "superficie. Por debajo de -30%, verificar por qué es barata."),
-                                     "Con entrada": st.column_config.TextColumn(width=90,
-                                         help="También pasa con los costos de entrada: TIR pesimista a 5 años "
-                                              "sobre el techo de la banda."),
+                                     "Con entrada": st.column_config.TextColumn(width=78,
+                                         help="También pasa con los costos de entrada: TIR pesimista a "
+                                              f"{S.HORIZONTE_ANIOS} años sobre la vara."),
+                                     "⚠": st.column_config.TextColumn(width=24,
+                                         help="Algo a verificar antes de decidir: el motivo está en la ficha."),
                                      "Aviso": st.column_config.LinkColumn(display_text="ver ↗", width=46,
                                                                          help=AVISO_VIEJO)})
             with st.container(border=True, key="tarjeta_ficha"):
@@ -1009,7 +1025,8 @@ with tab5:
         st.markdown("**¿Cuánto cambia P1 con cada supuesto?**",
                     help="Cada fila cambia un supuesto respecto de la base, más los dos extremos que los "
                          "combinan. Las filas con fondo son iguales a la base. P1 con costos de entrada "
-                         "exige que también la TIR pesimista a 5 años supere el techo de la banda.")
+                         f"exige que también la TIR pesimista a {S.HORIZONTE_ANIOS} años supere la vara. "
+                         "En el escenario sin costos de entrada las unidades a reciclar siguen pagando la obra.")
         st.badge("No responde a los filtros", **NO_FILTRA)
         s = cargar_sensibilidad()
         sin_extremos = s[~s["parametro"].str.startswith("extremo")]

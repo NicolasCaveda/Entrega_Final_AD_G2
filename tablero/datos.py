@@ -10,7 +10,7 @@ los nombres de barrio de eda.nombre_barrio(), nunca escritos a mano.
 LOS UMBRALES, COMO EN EL PIPELINE
 ---------------------------------
   % sobre el piso   neta >= piso de la banda (notebook 02, 19,4% sin filtros)
-  embudo            neta central > techo, luego P1 y P1 con entrada tal como
+  embudo            neta central > vara (ON al horizonte), luego P1 y P1 con entrada tal como
                     los guarda decision.py (que compara con > umbral)
   posicion          debajo: < piso; en banda: piso a techo inclusive; sobre: > techo
   H1                como validacion.resumen_hipotesis: medianas por barrio con
@@ -53,7 +53,7 @@ COLUMNAS = [
     "rent_bruta_pct", "rent_neta_pct", "meses_repago", "rent_bruta_min", "rent_bruta_max", "tir_5a_pct",
     "costos_entrada_pct", "abl_pct", "a_reciclar", "refaccion_usd",
     "universo_decision", "en_soporte_modelo", "neta_min_pct", "neta_max_pct", "tir_5a_min_pct",
-    "p1_comprar", "p1_comprar_con_entrada", "p2_no_dominada", "m2_relativo_celda",
+    "p1_comprar", "p1_comprar_con_entrada", "p2_no_dominada", "m2_relativo_celda", "alerta_revision",
     "p3_ocupacion_equilibrio_pct", "p3_ocupacion_airbnb_pct",
     "dist_transporte_m", "modo_cercano", "amenities", "cochera_txt", "dias_publicacion_ambientes",
     "operacion", "estimacion_confiable", "fecha_scraping",
@@ -175,17 +175,17 @@ def kpis(df: pd.DataFrame) -> dict:
 
 
 def embudo(df: pd.DataFrame) -> list[tuple[str, int]]:
-    """Universo de la decision -> neta central sobre el techo -> P1 -> P1 con entrada."""
-    _, techo = S.RETORNO_MINIMO_BANDA
+    """Universo de la decision -> neta central sobre la vara -> P1 -> P1 con entrada."""
+    vara = S.RETORNO_MIN_PCT + S.MARGEN_LIQUIDEZ_PCT
     u = df[df["universo_decision"]]
-    central = u[u["rent_neta_pct"] > techo]
+    central = u[u["rent_neta_pct"] > vara]
     p1 = central[central["p1_comprar"]]
     p1e = p1[p1["p1_comprar_con_entrada"]]
     return [
         ("Universo de la decisión", len(u)),
-        ("Neta central sobre el techo", len(central)),
-        ("Neta pesimista sobre el techo (P1)", len(p1)),
-        ("TIR pesimista sobre el techo", len(p1e)),
+        ("Neta central sobre la vara", len(central)),
+        ("Neta pesimista sobre la vara (P1)", len(p1)),
+        ("TIR pesimista sobre la vara", len(p1e)),
     ]
 
 
@@ -320,7 +320,9 @@ def ocupacion_airbnb(ruta: str = TEMPORAL) -> float:
 # --- Pestana 5: supuestos y alcance (tablas precalculadas, sin filtros) -------------
 SENSIBILIDAD = os.path.join(RAIZ, "data", "processed", "decision_sensibilidad.csv")
 EXTERNAS = os.path.join(RAIZ, "data", "external")
-SUPUESTOS_BASE = ["vacancia", "gastos_sin_abl", "abl", "entrada", "umbral", "margen"]
+SUPUESTOS_BASE = ["vacancia", "gastos_sin_abl", "abl", "entrada", "refaccion", "suba", "horizonte",
+                  "umbral", "margen"]
+NOMBRES_SUBA = {"sin": "sin suba", "reciclado": "efecto de reciclado", "modelo": "efecto completo del modelo"}
 NOMBRES_ABL = {"plano": "ABL plano", "segmentado": "ABL segmentado", "segmentado_tope": "ABL con tope"}
 
 # (nombre, archivo en data/external/, columna del periodo que cubre o None)
@@ -332,6 +334,7 @@ FUENTES = [
     ("Censo 2022", "censo_departamentos_comuna.csv", None),
     ("BA Data: transporte", "transporte_estaciones.csv", None),
     ("BA Data: espacios verdes", "espacios_verdes.csv", None),
+    ("data912: precios de ON en USD", "on_precios.csv", None),
 ]
 
 
@@ -349,6 +352,12 @@ def _escenario(f) -> str:
         return NOMBRES_ABL.get(f["abl"], f"ABL {f['abl']}")
     if p == "costos de entrada":
         return f"Costos de entrada: {f['entrada']}"
+    if p == "refaccion":
+        return f"Refacción: {f['refaccion']}"
+    if p == "suba por refaccion":
+        return f"Suba por refacción: {NOMBRES_SUBA.get(f['suba'], f['suba'])}"
+    if p == "horizonte":
+        return f"Horizonte {int(f['horizonte'])} años (ON a {int(f['horizonte'])} años: {_coma(f['umbral'])}%)"
     if p == "banda de retorno":
         return f"Umbral {_coma(f['umbral'])}%"
     if p == "margen por liquidez":
@@ -357,7 +366,7 @@ def _escenario(f) -> str:
 
 
 def cargar_sensibilidad(ruta: str = SENSIBILIDAD) -> pd.DataFrame:
-    """Los 22 escenarios de decision.py, con su etiqueta y la marca de los iguales a la base."""
+    """Los escenarios de decision.py, con su etiqueta y la marca de los iguales a la base."""
     s = pd.read_csv(ruta, encoding="utf-8-sig")
     base = s.loc[s["parametro"] == "base", SUPUESTOS_BASE].iloc[0]
     s["es_base"] = (s[SUPUESTOS_BASE] == base).all(axis=1)
@@ -372,5 +381,5 @@ def fuentes(carpeta: str = EXTERNAS) -> pd.DataFrame:
         t = pd.read_csv(os.path.join(carpeta, archivo), encoding="utf-8-sig", low_memory=False)
         filas.append({"fuente": nombre,
                       "periodo": str(t[col].astype(str).max()) if col else "",
-                      "descarga": str(t["fecha_descarga"].astype(str).max())})
+                      "descarga": str(t["fecha_descarga" if "fecha_descarga" in t else "fecha"].astype(str).max())})
     return pd.DataFrame(filas)

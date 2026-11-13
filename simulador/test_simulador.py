@@ -15,6 +15,12 @@ Oraculos independientes:
 con NEGATIVOS: otra vacancia tiene que cambiar la neta, una propiedad fuera
 del soporte o del presupuesto nunca pasa P1, y fuera de rango se rechaza.
 
+El universo del simulador no puede aplicar dos filtros del pipeline: si el
+precio publicado es el total (financiacion, pozo) y la revision a mano. Quien
+carga una propiedad carga su precio total, y esa propiedad no esta en la
+revision. Las columnas de la decision se comparan donde esos filtros no
+actuan, y las cifras de referencia salen del dataset, no se escriben aca.
+
 Uso:
     py simulador/test_simulador.py      # necesita parametros.json (--actualizar)
 """
@@ -76,21 +82,27 @@ r = SIM.simular(ventas, m, P, vac)
 # --- 1. Cada columna compartida, contra el pipeline -------------------------------
 comunes = [c for c in r.columns if c in ventas.columns]
 check("comparte al menos 30 columnas con el dataset", len(comunes) >= 30, f"comparte {len(comunes)}")
+sin_filtro = (ventas["precio_es_total"].fillna(True).astype(bool)
+              & ~ventas["excluida_revision"].fillna(False).astype(bool))
+DECISION = {"universo_decision", "p1_comprar", "p1_comprar_con_entrada"}
 for c in comunes:
-    ok, det = iguales(r[c], ventas[c])
+    msk = sin_filtro if c in DECISION else pd.Series(True, index=ventas.index)
+    ok, det = iguales(r.loc[msk, c], ventas.loc[msk, c])
     check(f"{c} igual que en el dataset analitico", ok, det)
+check("NEG: hay ventas que el simulador deja en el universo y el pipeline saca por el precio o la revision",
+      int((r["universo_decision"].astype(bool) & ~sin_filtro).sum()) > 0)
 
 # --- 2. Las cifras de referencia de la decision ----------------------------------
-u = r["universo_decision"].astype(bool)
-check("universo de la decision: 4.484", int(u.sum()) == 4484, f"da {int(u.sum())}")
-check("pasan P1: 18", int(r["p1_comprar"].sum()) == 18, f"da {int(r['p1_comprar'].sum())}")
-check("pasan P1 con costos de entrada: 4", int(r["p1_comprar_con_entrada"].sum()) == 4,
-      f"da {int(r['p1_comprar_con_entrada'].sum())}")
+u = r["universo_decision"].astype(bool) & sin_filtro
+for col in ("universo_decision", "p1_comprar", "p1_comprar_con_entrada"):
+    sim, pipe = int((r[col].astype(bool) & sin_filtro).sum()), int(ventas[col].fillna(False).astype(bool).sum())
+    check(f"{col}: el simulador cuenta las mismas que el pipeline ({pipe})", sim == pipe, f"da {sim}")
 
 # P2: dentro del universo, ninguna la supera <=> no dominada (decision.py, todos los pares)
 ok, det = iguales(r.loc[u, "p2_la_superan"] == 0, ventas.loc[u, "p2_no_dominada"].astype(bool))
 check("P2: 'ninguna la supera' coincide con p2_no_dominada", ok, det)
-check("frontera de P2: 140", int((r.loc[u, "p2_la_superan"] == 0).sum()) == 140)
+check("frontera de P2: la misma cantidad que el pipeline",
+      int((r.loc[u, "p2_la_superan"] == 0).sum()) == int(ventas["p2_no_dominada"].fillna(False).astype(bool).sum()))
 
 # P3: el equilibrio tercerizado es el de temporal.py
 ok, det = iguales(r["p3_equilibrio_tercerizada_pct"], ventas["p3_ocupacion_equilibrio_pct"].round(1))
@@ -105,7 +117,8 @@ base = {"barrio": "caballito", "tipo_familia": "casa", "sup_total_m2": 400.0, "a
         "dormitorios": 5.0, "banos": 3.0, "antiguedad_anios": 40.0, "venta_usd": 30000.0}
 fuera = SIM.simular(pd.DataFrame([base]), m, P, vac).iloc[0]
 check("NEG: casa grande regalada, fuera del soporte, no pasa P1",
-      not fuera["en_soporte_modelo"] and not fuera["p1_comprar"] and fuera["neta_min_pct"] > 7.6,
+      not fuera["en_soporte_modelo"] and not fuera["p1_comprar"]
+      and fuera["neta_min_pct"] > P["supuestos"]["retorno_minimo_vara_pct"],
       f"soporte {fuera['en_soporte_modelo']}, neta pesimista {fuera['neta_min_pct']}")
 cara = SIM.simular(pd.DataFrame([{**base, "tipo_familia": "departamento", "sup_total_m2": 50.0,
                                   "ambientes": 2.0, "dormitorios": 1.0, "venta_usd": 500000.0}]), m, P, vac).iloc[0]

@@ -234,7 +234,7 @@ const Motor = (() => {
     // Decision
     r.neta_min_pct = redondear(neta(r.alquiler_p10_usd_mes, venta, r.abl_ars_mes, vac, gsa, tc), 2);
     r.neta_max_pct = redondear(neta(r.alquiler_p90_usd_mes, venta, r.abl_ars_mes, vac, gsa, tc), 2);
-    const sube = vacio(r.alquiler_post_refaccion_usd_mes) ? 1 : r.alquiler_post_refaccion_usd_mes / alq;
+    const sube = prop.a_reciclar === 1 ? Sp.factor_suba_refaccion : 1;
     const nMin = neta(r.alquiler_p10_usd_mes * sube, venta, r.abl_ars_mes, vac, gsa, tc);
     r.tir_5a_min_pct = redondear(tir(nMin, inicial, Sp.horizonte_anios), 2);
     r.en_presupuesto = venta >= Sp.presupuesto_usd[0] && venta <= Sp.presupuesto_usd[1];

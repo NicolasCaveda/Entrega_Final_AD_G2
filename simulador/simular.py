@@ -458,7 +458,7 @@ def simular(props: pd.DataFrame, m: dict, P: dict, vacancia: float | None = None
     # Decision (decision.py)
     r["neta_min_pct"] = neta(r["alquiler_p10_usd_mes"], venta, r["abl_ars_mes"], vac, gsa, tc).round(2)
     r["neta_max_pct"] = neta(r["alquiler_p90_usd_mes"], venta, r["abl_ars_mes"], vac, gsa, tc).round(2)
-    sube = (r["alquiler_post_refaccion_usd_mes"] / alq).fillna(1.0)
+    sube = np.where(props["a_reciclar"].fillna(0) == 1, Sp["factor_suba_refaccion"], 1.0)
     n_min = neta(r["alquiler_p10_usd_mes"] * sube, venta, r["abl_ars_mes"], vac, gsa, tc)
     r["tir_5a_min_pct"] = pd.Series(tir(n_min, inicial, Sp["horizonte_anios"]), index=r.index).round(2)
     r["en_presupuesto"] = venta.between(*Sp["presupuesto_usd"])
