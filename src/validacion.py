@@ -159,12 +159,17 @@ def pendiente_intra(x: pd.Series, y: pd.Series, celda: pd.Series,
 # RESUMEN DE LOS CUATRO TESTS (para el informe)
 # ==========================================================================
 
-def resumen_hipotesis(df: pd.DataFrame, n_boot: int = 5_000) -> dict:
+def resumen_hipotesis(df: pd.DataFrame, n_boot: int = 5_000, factor_a_reciclar: float | None = None) -> dict:
     """
     Las cifras de la tabla resumen del notebook 04, con los mismos
     procedimientos, umbrales y semillas. Las usa reporte.py: el informe no
     puede leer las salidas de un notebook, y escribir los numeros a mano los
     desincronizaria. Si se cambia un test en el notebook, hay que cambiarlo aca.
+
+    `factor_a_reciclar`: por cuanto multiplicar la renta estimada de las
+    unidades a reciclar para sacarle el coeficiente de a_reciclar del modelo
+    (exp(-b)). Con el, se agrega el efecto de H3 sobre la renta sin ese
+    coeficiente, que sale de muy pocos alquileres (h3_renta_sin_coef).
     """
     import accesibilidad as A
     import eda
@@ -221,6 +226,10 @@ def resumen_hipotesis(df: pd.DataFrame, n_boot: int = 5_000) -> dict:
         bt = [eda.mediana_ponderada(x[i], w[i]) for i in (rng.integers(0, len(t), len(t)) for _ in range(n_boot))]
         r[clave] = eda.mediana_ponderada(x, w)
         r[f"{clave}_ic"] = tuple(np.percentile(bt, [2.5, 97.5]))
+    if factor_a_reciclar is not None:
+        alt = ok.assign(rent_bruta_pct=ok["rent_bruta_pct"] * np.where(ok["a_reciclar"] == 1, factor_a_reciclar, 1.0))
+        t = eda.efecto_estratificado(alt, "a_reciclar", "rent_bruta_pct", estrato, S.MIN_GRUPO_ESTRATO)
+        r["h3_renta_sin_coef"] = eda.mediana_ponderada(t["diferencia"].values, t["peso"].values)
 
     # H4: dos pendientes intra-celda y Wald con error bootstrap por celdas.
     obs = df[df["antiguedad_anios_imputada"] == 0]

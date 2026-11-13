@@ -214,7 +214,7 @@ def entrenar_y_validar(alq: pd.DataFrame, rep: Reporte):
     # Importante: el error global esta calculado sobre la mezcla de ALQUILERES,
     # que son sistematicamente mas chicos que las ventas (mediana 45 vs 66 m2).
     # Como el error crece con el tamanio, el error global subestima el de las
-    # ventas. Hasta la 2da entrega la banda del KPI 4 salia de esta tabla; desde
+    # ventas. Hasta la version anterior la banda del KPI 4 salia de esta tabla; desde
     # la 3ra sale de banda_cuantilica(), y esta queda como diagnostico.
     tmp = alq.copy()
     tmp["_err"] = err_rel
@@ -366,7 +366,11 @@ def ajuste_conformal(y: np.ndarray, lo: np.ndarray, hi: np.ndarray, grupo: np.nd
 
     El puntaje de cada observacion es cuanto quedo afuera de su banda fuera
     de muestra (negativo si cayo adentro). El ajuste es su cuantil
-    ceil((n + 1) x 0,8) / n, que garantiza la cobertura con n finito. Un grupo
+    ceil((n + 1) x 0,8) / n: la correccion de muestra finita de la regresion
+    cuantilica conformal. Da una cobertura del 80% en promedio solo si los
+    alquileres nuevos son intercambiables con los de calibracion (mismo
+    portal, misma epoca); no la asegura para un aviso puntual ni para otro
+    mercado, y aca se mide fuera de muestra sobre avisos de RE/MAX. Un grupo
     sin observaciones usa el ajuste de todos juntos.
     """
     puntaje = np.maximum(lo - y, y - hi)

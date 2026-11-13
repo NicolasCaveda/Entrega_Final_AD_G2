@@ -1,67 +1,90 @@
-# Validación, análisis avanzado y decisión — mercado inmobiliario de CABA
+# ¿Conviene comprar para alquilar? Rentabilidad inmobiliaria en CABA
 
-**TP Integrador · 82.04 Analítica Descriptiva (ITBA) · Grupo 2 · 3ra pre-entrega**
+**TP Integrador · 82.04 Analítica Descriptiva (ITBA) · Grupo 2 · 2026**
 
-Tercera etapa del análisis de rentabilidad inmobiliaria para un pequeño inversor
-particular que, con USD 80.000 a 200.000, evalúa comprar **una** unidad en CABA para
-alquilarla. Esta entrega valida formalmente las hipótesis, completa la fusión espacial,
-resuelve y evalúa la decisión del inversor, y la pone en sus manos con un tablero y un
-simulador.
+Iael Berezovsky · Nicolás Caveda · Máximo Lladhon · Ezequiel Naymark
 
-La 1ra y la 2da entrega están en sus propias carpetas y no se modifican. Esta carpeta es
-autónoma: tiene su propio pipeline, sus datos y sus tests, y no lee nada fuera de ella.
+Análisis de rentabilidad para un **pequeño inversor particular** que, con USD 80.000 a
+200.000 en dólares, evalúa comprar **una** unidad en la Ciudad Autónoma de Buenos Aires
+para alquilarla, con un horizonte de 5 años. La alternativa contra la que se mide es la
+renta fija en dólares al mismo plazo. El trabajo responde tres decisiones: si comprar
+(P1), qué propiedad (P2) y si alquilarla de forma tradicional o temporal (P3).
 
----
-
-## Hallazgos, en cinco líneas
-
-El desarrollo, con cada cifra calculada en vivo, está en
-[`informe/INFORME_HALLAZGOS.md`](informe/INFORME_HALLAZGOS.md), ordenado por cuánto cambia
-la decisión del inversor.
-
-1. **Para la propiedad típica, la decisión es no comprar.** La neta mediana (5,65%)
-   queda debajo de la banda de retorno mínimo (7,10% a 7,60%). Con los costos de entrada,
-   la TIR a 5 años baja a 4,27%. Solo 18 de 4.484 propiedades superan el techo en el
-   escenario pesimista, y 4 con costos de entrada.
-2. **No hay una "mejor propiedad".** Solo el 7% de los pares de propiedades se distingue
-   con la banda de error. P2 devuelve una lista corta de 140, no un ranking.
-3. **El barrio es la palanca más fuerte**: cada USD 500 más de m² resta alrededor de un
-   punto de rentabilidad (H1). Las torres nuevas con amenities rinden menos: cuestan un
-   tercio más por m² y se alquilan solo un sexto más.
-4. **El temporal no rescata la inversión**, salvo para quien lo autogestione con más de
-   la mitad del año ocupado.
-5. **La cercanía al transporte ya está en el precio del barrio**: hasta 1 km no se
-   paga, y más allá el m² vale alrededor de 7% menos (H2, reformulada).
+| Para el inversor | Dónde |
+|---|---|
+| **Tablero**: ¿conviene el mercado, dónde y qué mirar? | Versión publicada: *se completa al publicar la app desde este repositorio* ([cómo publicarlo](#publicarlo-en-streamlit-community-cloud)). Localmente: [El tablero](#el-tablero) |
+| **Simulador**: ¿esta propiedad, a este precio? | [`simulador/simulador.html`](simulador/simulador.html): se descarga y se abre con doble clic |
+| **Informe de hallazgos**, con cada cifra calculada en vivo | [`informe/INFORME_HALLAZGOS.md`](informe/INFORME_HALLAZGOS.md) |
 
 ---
 
-## Qué contiene esta entrega
+## Hallazgos
 
-La carpeta parte de la **base de la 2da entrega, depurada y verificada**: el pipeline
-corre acá desde el crudo y reproduce las cifras de referencia (ver
-[Reproducir](#reproducir)). Sobre esa base:
+Las cifras de esta sección las escribe `py src/reporte.py` a partir de
+`data/processed/`, igual que el informe: no se editan a mano.
 
-- la **fusión espacial** y la medida de accesibilidad (ver
-  [Accesibilidad al transporte](#accesibilidad-al-transporte));
-- la **magnitud y forma de H2** (ver [H2](#h2-precio-del-m²-y-distancia-a-la-red));
-- el **ABL segmentado** y los **costos de entrada y refacción**, que cambian el KPI 2 y
-  suman la TIR a 5 años (ver [Costos del propietario](#costos-del-propietario-antes-y-después));
-- la **revisión del modelo de alquiler** y la banda cuantílica del KPI 4 (ver
-  [Modelo de alquiler](#modelo-de-alquiler));
-- los **tests formales de H1 a H4** (ver [Hipótesis](#hipótesis-los-tests-formales));
-- la **síntesis de atributos (PCA y MCA) y los micro-mercados**, como análisis
-  informativo que no entra al modelo (ver [Síntesis de atributos](#síntesis-de-atributos-y-micro-mercados));
-- la **función de decisión** para P1 a P3, implementada y evaluada (ver
-  [Función de decisión](#función-de-decisión));
-- el **tablero para el inversor**, en Streamlit y publicado en
-  <https://dashboard-descriptiva-g2.streamlit.app/> (ver [El tablero](#el-tablero));
-- el **simulador**, una página que evalúa cualquier propiedad que el inversor esté
-  considerando, esté o no en el relevamiento (ver [El simulador](#el-simulador));
-- el **informe de hallazgos**, regenerado con todo lo anterior.
+<!-- hallazgos:inicio (lo escribe py src/reporte.py; no editar a mano) -->
 
-La revisión del modelo no cambió el alquiler estimado, así que los KPIs 1 a 3 quedan
-fijos; el KPI 4 sí cambió. Qué se pidió para esta entrega y cómo se resolvió cada punto
-está en [Qué cambia respecto de la 2da entrega](#qué-cambia-respecto-de-la-2da-entrega).
+1. **Para la propiedad típica, la decisión es no comprar.** La neta mediana (5,65%) queda debajo de la renta fija en dólares al mismo plazo (6,26%, la TIR de las ON que vencen en 4 a 6 años). Con los costos de comprar, la TIR a 5 años mediana es 4,27%.
+2. **Pocas propiedades le ganan a la ON aun en el escenario pesimista**: 93 de 3.766 del universo, y 12 con costos de entrada. Son más baratas que su celda y se leyeron a mano: 8 se excluyeron por ser oficinas o de uso mixto, y 3 de las 12 finales llevan una alerta para verificar.
+3. **No hay una "mejor propiedad".** Solo el 7,2% de los pares se distingue con la banda de error: P2 devuelve una lista de 397 propiedades, no un ranking.
+4. **El barrio es la palanca más fuerte**: cada USD 500 más de m² del barrio resta 0,98 pp de rentabilidad bruta (H1). Las torres nuevas con amenities cuestan 33% más por m² y se alquilan solo 17% más.
+5. **El temporal no rescata la inversión** salvo autogestionado: necesita una ocupación de 65,5% con gestión tercerizada y 51,7% autogestionado.
+6. **La cercanía al transporte ya está en el precio del barrio**: hasta 1 km no se paga; más allá, un descuento de 6,7% que es exploratorio (H2, reformulada).
+7. **24% de la oferta se declara apta para crédito**, sin pagar más por m². Estar cerca de una plaza no se distingue en el precio; de un parque, +5,9% en departamentos (IC 95% [0,5%, 11,7%]), evidencia débil.
+
+<!-- hallazgos:fin -->
+
+---
+
+## Seguimiento de la devolución
+
+La única sección del repositorio que habla del proceso de corrección. Cada observación
+se resolvió donde estaba el problema (datos, código, modelo o tablero), no solo en el
+texto.
+
+| Observación | Estado | Qué cambiamos | Dónde se verifica |
+|---|---|---|---|
+| **Revisar a mano las listas de P1 y P2**: precio de la candidata nº 1, usos mixtos u oficinas, señal de financiación | Resuelta | El precio de la candidata nº 1 pasa a ser el total (USD 85.000 + 65.000 de hipoteca privada), igual que otro aviso con "13 cuotas". Se amplió la minería de texto: "A refac." cuenta como a reciclar, y `en_pozo` y `financiacion` detectan "POZO", fecha de entrega futura, "N cuotas", anticipo y "ctas". El universo de la decisión deja afuera las ventas con financiación del vendedor o en pozo. Se leyeron a mano las finales de P1 y los primeros puestos de P2, y se buscaron señales de riesgo en el resto: las oficinas y los usos mixtos se excluyen con su motivo, y lo que hay que verificar lleva una alerta | `src/limpieza.py` (`CORREGIR_PRECIO_TOTAL_USD`), `src/variables.py` y sus regresiones en `src/test_variables.py`, `src/decision.py` (`universo`), [`data/reference/revision_listas.csv`](data/reference/revision_listas.csv), notebook 06 sección 1, tablero, pestaña *¿Qué comprar?* (columna ⚠ y ficha) |
+| **Escenario "sin costos de entrada"**: cobraba el alquiler refaccionado sin pagar la obra; el test excluía esas unidades | Resuelta | Los costos de entrada y la refacción son parámetros separados: sin costos de entrada, la obra se sigue pagando. El test cubre las unidades a reciclar con un oráculo de valor presente y un negativo sintético | `src/decision.py` (`tir_pesimista`), `src/test_decision.py`, `data/processed/decision_sensibilidad.csv`, tablero, pestaña *Supuestos y alcance* |
+| **El efecto de `a_reciclar` sale de 2 alquileres** y explicaba buena parte de la suba post-refacción | Resuelta: supuesto explícito con sensibilidad | La suba del alquiler al refaccionar es un supuesto: el efecto de `reciclado`, estimado con 131 alquileres. La decisión prueba sin suba y con el efecto completo del modelo, y no cambia. En H3 se informa el n y el efecto de la renta sin ese coeficiente | `src/supuestos.py` (`SUBA_REFACCION`), `src/modelo_alquiler.py` (`factores_suba_refaccion`), `src/kpis.py`, notebooks 02 (sección 3), 03 (sección 3), 04 (H3) y 06 (sección 5), informe, hallazgos 2 y 4 |
+| **Claims del simulador**: "8 de cada 10 alquileres reales" y su uso con avisos de otros portales | Resuelta | La cobertura se informa como lo que es, cobertura fuera de muestra sobre avisos de alquiler de RE/MAX, y sale del modelo guardado. Se aclara que no se midió sobre contratos ni sobre otros portales | `simulador/simular.py`, `simulador/web/plantilla.html`, tablero (encabezado y limitaciones), [El simulador](#el-simulador) |
+| **Comparar contra renta fija de distinta duration**, alineada con el horizonte, en lugar de una ON a 2037 | Resuelta | Curva de 31 ON bullet en dólares (YPF, Pampa, Pan American, Pluspetrol, TGS y Telecom) con precios de la API de data912.com y términos del reporte de ON de Criteria. La TIR se calcula en el código. La vara de P1 es la TIR a 5 años (± 1); la curva se informa a 1, 2, 3 y 5 años, y la sensibilidad prueba un horizonte de 3 años con la ON de 3 años | `src/curva_on.py`, `src/test_curva_on.py`, `data/external/on_terminos.csv` y `on_precios.csv`, `src/supuestos.py` sección 4, notebook 06 sección 0, tablero (barra lateral) |
+| **Preguntas pendientes**: proporción de avisos aptos para crédito y prima por cercanía a espacios verdes | Resuelta | Proporción en las ventas, en el universo y en P1, y precio del m² contra comparables. Prima de plazas y parques con el método de H2 y errores agrupados | `src/credito_y_verdes.py`, notebook 01 sección 7, notebook 06 sección 6, informe, hallazgo 8 |
+| **Un solo proyecto**, sin carpetas por entrega | Resuelta | Este repositorio contiene solo el proyecto final, con historial propio. Las etapas anteriores quedan en el repositorio de trabajo del grupo | Este repositorio |
+| El escalón de H2 a 1 km se eligió con los mismos datos | Resuelta | Se presenta como resultado exploratorio | Informe, hallazgo 7 y tabla de hipótesis |
+| Docstrings que prometían más que el código ("garantiza la cobertura") | Resuelta | Redactados según lo que el código hace | `src/modelo_alquiler.py` (`ajuste_conformal`) |
+| Para portfolio: agrupar avisos duplicados en la validación cruzada, elegir la penalización cuantílica dentro de la validación anidada, cobertura de la banda por tramo de superficie, guardar el HTML de las publicaciones | No resuelta | Quedan como continuación. No cambian las conclusiones: la revisión a mano encontró un par de avisos duplicados en las listas finales y los marcó con una alerta | [Limitaciones](#limitaciones) |
+
+---
+
+## Cómo está organizado
+
+| Carpeta | Qué hay |
+|---|---|
+| `src/` | El pipeline, los supuestos con su fuente (`supuestos.py`) y los tests |
+| `notebooks/` | El análisis contado en orden, con cada gráfico entre su pregunta y su lectura |
+| `data/raw/` | `dataset_maestro.csv`: el relevamiento de RE/MAX, sin modificar |
+| `data/external/` | Tablas fechadas de las fuentes externas, capas espaciales y la curva de ON |
+| `data/processed/` | `dataset_analitico.csv` (la matriz final), los reportes de cada script y el diccionario de datos |
+| `data/reference/` | La revisión a mano de las listas y el ranking de barrios de la versión inicial |
+| `informe/` | El informe de hallazgos (lo genera `reporte.py`) y el catálogo de fuentes externas |
+| `tablero/` | El tablero en Streamlit |
+| `simulador/` | El simulador: la página autocontenida y su versión por consola |
+| `graficos/` | Los gráficos que guardan los notebooks |
+
+### Los notebooks
+
+Están guardados con sus salidas, así que se leen sin ejecutar nada.
+
+| Notebook | La pregunta |
+|---|---|
+| [`01_accesibilidad`](notebooks/01_accesibilidad.ipynb) | ¿Qué tan conectada está cada propiedad a la red de transporte, el mercado lo paga en el precio, y se paga estar cerca de una plaza o un parque? |
+| [`02_costos_del_propietario`](notebooks/02_costos_del_propietario.ipynb) | ¿Cuánto le queda al inversor después de los costos, y le gana a una ON? ABL segmentado, costos de entrada, refacción y TIR a 5 años |
+| [`03_modelo_alquiler`](notebooks/03_modelo_alquiler.ipynb) | ¿Cuánto se puede confiar en el alquiler estimado? Comparación contra una referencia, qué paga el mercado y la banda de incertidumbre |
+| [`04_validacion`](notebooks/04_validacion.ipynb) | ¿Qué hipótesis se sostienen con un contraste formal, con qué magnitud, y cuáles cambian la decisión? |
+| [`05_sintesis_atributos`](notebooks/05_sintesis_atributos.ipynb) | ¿Se pueden resumir los atributos del aviso en pocos ejes, y hay tipos de propiedad que rinden distinto en el mismo barrio y tamaño? |
+| [`06_decision`](notebooks/06_decision.ipynb) | ¿Conviene comprar, qué propiedad, y tradicional o temporal? La vara, la revisión de las listas, la función de decisión y su sensibilidad |
 
 ---
 
@@ -69,86 +92,46 @@ está en [Qué cambia respecto de la 2da entrega](#qué-cambia-respecto-de-la-2d
 
 > **Tengo entre USD 80.000 y 200.000: ¿conviene comprar para alquilar, y si compro, qué?**
 
-El tablero es la interfaz del inversor con el análisis. No replica los notebooks: cada
-pestaña responde una pregunta suya, y todo lo que muestra sale de columnas ya calculadas
-en `data/processed/dataset_analitico.csv`. La app solo filtra y resume; no recalcula
-ningún KPI, así que cada número de la pantalla coincide con el del informe.
-
-### Cómo abrirlo
-
-**En la web: <https://dashboard-descriptiva-g2.streamlit.app/>**
-
-Está publicado en Streamlit Community Cloud, así que se abre desde cualquier navegador,
-sin instalar nada. Corre el mismo `tablero/app.py` de este repositorio sobre el dataset
-versionado. Si estuvo un tiempo sin visitas, Streamlit lo pone a dormir: la primera
-apertura puede mostrar un botón para despertarlo y tardar unos segundos.
-
-**En la computadora**, por ejemplo para probar un cambio antes de subirlo:
-
-```bash
-py -m pip install -r requirements.txt     # una sola vez
-cd tablero
-py -m streamlit run app.py
-```
-
-Se abre en el navegador, en `http://localhost:8501`. Se corre desde `tablero/` porque
-Streamlit toma el tema de `tablero/.streamlit/config.toml` de la carpeta desde donde se
-ejecuta. Lee el dataset versionado, así que no hace falta correr el pipeline antes.
-
-La versión publicada instala sus dependencias desde el `requirements.txt` de la raíz del
-repositorio, y no desde el de esta carpeta: Community Cloud no maneja bien el espacio de
-"Entrega 3" en la ruta. Las versiones son las mismas en los dos archivos; si cambian en
-uno, hay que cambiarlas en el otro.
-
-### Qué muestra
-
-Un **encabezado fijo** indica cuántas propiedades quedan con los filtros elegidos
-("Mostrando N de 9.203 propiedades"), de qué cartera y en qué fecha se relevaron. Debajo,
-siempre visibles, van tres limitaciones: son **precios de publicación**, es **una sola
-inmobiliaria** que publica alrededor de 8% más barato que el mercado, y **cada
-rentabilidad es una banda**, no un número.
+El tablero es la interfaz del inversor con el análisis. Cada pestaña responde una
+pregunta suya, y todo lo que muestra sale de columnas ya calculadas en
+`data/processed/dataset_analitico.csv`: la app filtra y resume, no recalcula ningún KPI,
+así que cada número de la pantalla coincide con el del informe.
 
 | Pestaña | La pregunta del inversor | Qué muestra |
 |---|---|---|
-| **¿Conviene comprar?** | ¿La propiedad típica le gana a la renta fija en dólares? | Neta mediana con su banda, TIR a 5 años, porcentaje de propiedades sobre el piso y distancia al piso. Histograma de la neta (o de la TIR) contra la banda de retorno mínimo, y cuántas propiedades pasan cada vara: 4.484 → 227 → 18 → 4 sin filtros |
-| **¿Dónde?** | ¿Qué barrios rinden más, y por qué? | Mapa de las propiedades coloreado por rentabilidad; neta y TIR medianas por barrio, con la banda; y la relación entre el m² del barrio y la rentabilidad (H1) |
-| **¿Qué comprar?** | ¿Qué propiedades vale la pena mirar? | Las que pasan P1, rotuladas **"a verificar"**, nunca "comprar", porque cuestan alrededor de 30% menos por m² que su celda; la frontera de P2 como rangos, ordenada por ancho de banda y no por rentabilidad; y la ficha de la propiedad elegida, con el link al aviso |
-| **¿Tradicional o temporal?** | ¿Alquilar por noche cambia la respuesta? | En cuántas celdas gana el temporal según la ocupación, con gestión tercerizada y autogestionada, y la ocupación de equilibrio para cada vacancia del tradicional |
-| **Supuestos y alcance** | ¿Cuánto depende todo de los supuestos, y qué no se puede afirmar? | Cuántas propiedades pasan P1 en cada uno de los 22 escenarios de sensibilidad, las limitaciones completas y la fecha de cada fuente |
+| **¿Conviene comprar?** | ¿La propiedad típica le gana a la renta fija en dólares? | Neta mediana con su banda, TIR a 5 años, propiedades sobre el piso de la banda de retorno y cuántas pasan cada etapa de la decisión |
+| **¿Dónde?** | ¿Qué barrios rinden más, y por qué? | Mapa coloreado por rentabilidad, neta y TIR por barrio con su banda, y la relación entre el m² del barrio y la rentabilidad (H1) |
+| **¿Qué comprar?** | ¿Qué propiedades vale la pena mirar? | Las que pasan P1, rotuladas **"a verificar"** y con ⚠ si la revisión encontró algo; la frontera de P2 como rangos, ordenada por ancho de banda y no por rentabilidad; y la ficha de la propiedad elegida, con el motivo de la alerta y el link al aviso |
+| **¿Tradicional o temporal?** | ¿Alquilar por noche cambia la respuesta? | En cuántas celdas gana el temporal según la ocupación, con gestión tercerizada y autogestionada |
+| **Supuestos y alcance** | ¿Cuánto depende todo de los supuestos, y qué no se puede afirmar? | Cuántas propiedades pasan P1 en cada escenario de sensibilidad, las limitaciones y la fecha de cada fuente |
 
-Toda neta va con su banda, y todo gráfico de rentabilidad tiene sombreada la banda de
-retorno mínimo. Los resúmenes son medianas.
+Un encabezado fijo indica cuántas propiedades quedan con los filtros, de qué cartera y en
+qué fecha se relevaron, y muestra siempre tres limitaciones: son precios de publicación,
+es una sola inmobiliaria, y cada rentabilidad es una banda. La barra lateral tiene los
+filtros (presupuesto, tipo, comuna, barrio, ambientes, superficie, antigüedad y métrica)
+y la vara de retorno, que es una referencia fija y no un filtro.
 
-### Filtros
+### Cómo abrirlo
 
-En la barra lateral: presupuesto, tipo de propiedad, comuna, barrio, ambientes,
-superficie, antigüedad y la métrica (neta o TIR a 5 años), con un botón para
-restablecerlos. Arranca con el presupuesto del inversor y solo departamentos.
+Desde la raíz del repositorio:
 
-- **Qué responde a los filtros.** Las vistas que leen el dataset (la primera pestaña,
-  el mapa y la dispersión de la segunda, y toda la tercera). Las que leen tablas
-  precalculadas (ranking de barrios, P3 y sensibilidad) no, y cada una lo dice.
-- **Estados sin información.** Si no queda ninguna propiedad, un mensaje reemplaza los
-  gráficos. Si quedan menos de 30, un aviso advierte que la mediana es poco confiable.
-- **Casas y PH.** Si se eligen, el tablero avisa que el modelo casi no tiene alquileres
-  observados de ellos, y oculta P1 y P2.
-- **Fuera de los filtros, a propósito**: la banda de retorno, que es una referencia fija,
-  y las amenities, que no cambian la decisión.
+```bash
+py -m pip install -r requirements.txt     # una sola vez
+py -m streamlit run tablero/app.py
+```
 
-### Cómo se verificó
+Se abre en `http://localhost:8501`. Toma el tema de `.streamlit/config.toml` y lee el
+dataset versionado, así que no hace falta correr el pipeline antes.
 
-`py tablero/test_tablero.py` corre 106 verificaciones sobre la lógica del tablero
-(`tablero/datos.py`):
+### Publicarlo en Streamlit Community Cloud
 
-- **Sin filtros reproduce las cifras de referencia**: neta mediana 5,65%, 19,4% de las
-  propiedades sobre el piso, TIR mediana 4,27% y las etapas 4.484 → 227 → 18 → 4.
-- **Cada filtro**, contra la condición que dice aplicar, fila por fila.
-- **Negativos**: un filtro que deja cero filas no rompe los KPIs ni las etapas.
+En <https://share.streamlit.io>, *Create app* desde este repositorio, rama `main`, con
+**main file path** `tablero/app.py`. Community Cloud instala las dependencias del
+`requirements.txt` de la raíz y lee el tema de `.streamlit/config.toml`.
 
-El diseño (paleta, pestañas, filtros, estados) está en
-[`data/processed/DISENO_TABLERO.md`](data/processed/DISENO_TABLERO.md); qué columnas usa y
-qué advertencias son obligatorias, en
-[`data/processed/GUIA_TABLERO.md`](data/processed/GUIA_TABLERO.md).
+`py tablero/test_tablero.py` verifica la lógica del tablero: sin filtros reproduce las
+cifras del dataset leído directamente del CSV, cada filtro cumple la condición que dice
+aplicar, y un filtro que deja cero filas no rompe nada.
 
 ---
 
@@ -156,892 +139,250 @@ qué advertencias son obligatorias, en
 
 > **Encontré esta propiedad: ¿a este precio me conviene?**
 
-Agregamos el simulador para que el inversor pueda calcular la rentabilidad posible de
-cualquier propiedad que tenga en vista, o de cualquier combinación de barrio, tamaño,
-antigüedad y características que esté evaluando. Así llega a la visita y a la
-negociación sabiendo cuánto puede esperar que rinda, con qué margen de error y hasta qué
-precio la compra le gana a la renta fija. Usa el mismo modelo, los mismos supuestos y los
-mismos criterios de decisión que el resto del análisis.
+El análisis habla del mercado, pero el inversor compra una sola propiedad, y la que va a
+mirar de verdad casi seguro no está en el relevamiento. El simulador le hace a cualquier
+propiedad la misma evaluación que recibió cada venta del dataset: alquiler estimado con
+su banda, ABL, neta, costos de entrada, TIR a 5 años, P1, su posición frente a la
+frontera de P2 y P3. Usa el mismo modelo guardado y los mismos supuestos.
 
-### Por qué lo agregamos
+- **El precio lo carga el inversor**, y se toma como el precio total. Puede poner el que
+  piensa ofrecer, o bajarlo hasta encontrar el precio a partir del cual la propiedad le
+  gana a la vara: su **precio de reserva** para negociar.
+- **Permite probar combinaciones**: cambiar solo el barrio o sumar una característica y
+  ver cuánto se mueve el resultado.
+- **La vacancia es del inversor**: quien ya tiene un inquilino en vista ve cómo cambia
+  la conclusión.
+- **Llega a quien decide**: es un solo archivo HTML, sin servidor ni internet, y la
+  dirección de la página guarda la propiedad cargada para compartirla.
 
-**El análisis habla del mercado, pero el inversor compra una sola propiedad.** "Para la
-propiedad típica, la decisión es no comprar" es una afirmación sobre la mediana, y nadie
-compra la mediana. P1 y P2 bajan la conclusión a una lista corta, pero solo de las 4.484
-propiedades del universo de la decisión, dentro de la cartera de RE/MAX relevada en agosto. La propiedad que el inversor va a
-mirar de verdad casi seguro no está ahí: puede salir de otro portal, de otra
-inmobiliaria, de un cartel en la puerta o de un aviso del mes siguiente. El tablero no
-puede evaluarla, porque solo filtra filas que ya están calculadas. El simulador cubre ese
-hueco: con los datos del aviso, le hace a esa propiedad la misma evaluación que recibió
-cada una de las 4.484. Calcula el alquiler estimado con su banda, el ABL, la neta, los
-costos de entrada, la TIR a 5 años, P1, la posición frente al universo de P2 y P3.
-
-**El precio de publicación no es el de compra.** Es la primera limitación del trabajo:
-los avisos muestran lo que pide el vendedor. En el simulador, el precio lo carga el
-inversor. Puede poner el que piensa ofrecer y ver cuánta rentabilidad recupera, o bajarlo
-hasta encontrar el precio a partir del cual la propiedad cruza la banda de retorno. Esa
-cifra es su **precio de reserva** para negociar. Un ejemplo: un 2 ambientes de 50 m² y 30
-años en Caballito, publicado a USD 110.000, rinde 4,75% neto (banda de 3,81% a 5,81%) y
-3,51% de TIR. La neta central recién llega al piso de la banda (7,10%) por debajo de
-USD 73.000. La pesimista supera el techo (7,60%) recién por debajo de USD 55.000, que
-está afuera del presupuesto. Que la respuesta sea "a ningún precio que se pueda
-negociar" también sirve, porque evita comprar algo que no le gana a una obligación
-negociable.
-
-**Permite probar combinaciones antes de salir a buscar.** Los hallazgos dicen en general
-que el barrio es la palanca más fuerte y que las amenities rinden menos. El simulador
-deja comprobarlo en el perfil que le interesa al inversor: puede cambiar solo el barrio,
-o sumar una característica, y ver cuánto se mueve el resultado. En la misma unidad de
-Caballito, la cochera suma unos USD 80 por mes al alquiler estimado (la neta pasa de
-4,75% a 5,47% al mismo precio). Las amenities suman USD 11, así que el inquilino casi no
-las paga aunque encarezcan la compra. Marcarla "a reciclar" baja el alquiler y, con la
-refacción mínima, deja la TIR en 1,55%. Con eso el inversor sabe qué combinaciones vale
-la pena buscar antes de visitar, y concentra la búsqueda del tablero en ellas.
-
-**Algunos supuestos son del inversor.** La vacancia se puede cambiar: quien ya tiene un
-inquilino en vista, o espera que la unidad tarde en alquilarse, ve cómo cambia la
-conclusión. Los demás supuestos (gastos, ABL, costos de entrada, refacción) aparecen en
-el desglose con sus valores, para que se sepa qué hay detrás de cada cifra.
-
-**Mide con la misma vara que el informe.** No es una calculadora aparte con fórmulas
-propias. El modelo es el mismo `.joblib` que guarda `kpis.py`, y los parámetros los arma
-`simular.py --actualizar` con las funciones de `src/` (supuestos, costos y decisión).
-Los tests (ver [Cómo se verificó](#cómo-se-verificó-1)) comprueban que, para cada una de
-las 10.749 ventas, el simulador da los mismos valores que el dataset analítico. Mantiene
-también los recaudos del tablero: cada rentabilidad aparece con su banda, P1 dice
-**"a verificar"** y nunca "comprar", una propiedad fuera del soporte del modelo se marca
-como extrapolación, y las limitaciones están siempre visibles.
-
-**Llega a quien decide.** El simulador es un solo archivo HTML: se abre con doble clic,
-sin instalar nada, sin servidor y sin internet, así que el inversor lo puede usar en
-cualquier lugar, incluso en plena visita. La dirección de la página guarda la propiedad
-cargada, de modo que puede mandarle el link a un socio, al escribano o a un asesor, y
-ellos ven exactamente el mismo caso.
-
-### Tablero y simulador
-
-Responden preguntas distintas y se usan uno detrás del otro.
-
-| | Tablero | Simulador |
-|---|---|---|
-| **La pregunta** | ¿Conviene el mercado? ¿Dónde y qué buscar? | ¿Esta propiedad, a este precio? |
-| **Sobre qué** | Las 9.203 ventas con alquiler estimado confiable | La propiedad que carga el inversor, esté o no en el relevamiento |
-| **Qué calcula** | Nada: filtra y resume columnas ya calculadas | Todo, con el modelo y los supuestos de la entrega |
-| **Cómo se abre** | En el navegador, con [el link](https://dashboard-descriptiva-g2.streamlit.app/) | Doble clic, sin internet |
-
-El recorrido es este: el tablero acota barrios y perfiles, el inversor sale a buscar,
-y cada propiedad concreta (con su precio real o el que piensa ofrecer) pasa por el
-simulador antes de decidir.
-
-### Cómo abrirlo
-
-Doble clic en [`simulador/simulador.html`](simulador/simulador.html). La misma cuenta,
-por consola:
+**Lo que no es.** No es un tasador. La banda del alquiler tiene una **cobertura fuera de
+muestra medida sobre avisos de alquiler de RE/MAX**; no se midió sobre contratos ni sobre
+avisos de otros portales. Para una propiedad de otro portal, el simulador da la misma
+cuenta, pero su precisión no está verificada. Comprar sigue exigiendo mirar lo que el
+aviso no dice: el estado real, las expensas, la documentación y por qué la propiedad está
+más barata que su celda.
 
 ```bash
-py simulador/simular.py                                              # pregunta los datos
+py simulador/simular.py                                                  # pregunta los datos
 py simulador/simular.py --barrio caballito --m2 50 --ambientes 2 --venta 110000
 ```
 
-### Qué muestra
-
-A la izquierda está la propiedad: barrio, tipo, superficie, ambientes, dormitorios,
-baños, antigüedad, 14 características, el precio (es opcional) y la vacancia. A la
-derecha aparecen el **alquiler estimado** con su banda y el control contra el alquiler
-mediano por m² del barrio. Si se cargó el precio, se suman la **rentabilidad neta y la
-TIR** contra la banda de retorno mínimo, la **decisión** (P1, la posición frente a las
-4.484 propiedades del universo de P2 y P3) y un **desglose** con todas las cifras y sus
-supuestos. Sin precio, solo estima el alquiler.
-
-### Cómo se verificó
-
-`py simulador/test_simulador.py` corre 91 verificaciones:
-
-- **Contra el pipeline**: cada una de las 10.749 ventas del dataset analítico, pasada por
-  el simulador, da los mismos valores en las 33 columnas que comparte con el dataset
-  (alquiler y banda, ABL, netas, costos, TIR, universo y P1). Las cifras de referencia
-  salen iguales: universo de 4.484, 18 que pasan P1 y 4 con costos de entrada, y una
-  frontera de P2 de 140.
-- **La página contra Python**: la página repite el cálculo en JavaScript
-  (`simulador/web/motor.js`). El test la corre en Chrome sin ventana sobre las 10.749
-  ventas y compara cada cifra con la de Python. También compara el modelo exportado como
-  coeficientes con el `predict()` de scikit-learn.
-- **Negativos**: con otra vacancia la neta cambia, una casa grande "regalada" fuera del
-  soporte no pasa P1 aunque su neta sea alta, una propiedad fuera del presupuesto no
-  entra al universo, y una superficie fuera de rango se rechaza.
-
-Si se vuelve a correr el pipeline, se regeneran los parámetros y la página:
-
-```bash
-py simulador/simular.py --actualizar     # parametros.json, desde la salida del pipeline
-py simulador/simular.py --html           # simulador/simulador.html
-```
-
-### Lo que no es
-
-**No es un tasador.** Estima el alquiler con un modelo entrenado con los avisos de una
-sola inmobiliaria, y hereda todas las [limitaciones](#limitaciones) del análisis. El
-simulador sirve para descartar rápido y para negociar con números. Comprar sigue
-exigiendo mirar lo que el aviso no dice: el estado real, las expensas, la documentación y
-por qué la propiedad está más barata que su celda.
+`py simulador/test_simulador.py` pasa cada venta del dataset por el simulador y compara
+cada cifra con la del pipeline (en las columnas de la decisión, donde no actúan los
+filtros de precio total y revisión, que el simulador no puede conocer), y corre la página
+en Chrome sin ventana para comparar el cálculo en JavaScript con el de Python.
 
 ---
 
-## Cómo leer el trabajo: los notebooks
+## Métodos
 
-Los notebooks cuentan el análisis en orden y guían la lectura. Cada uno responde una
-pregunta del inversor; los scripts de `src/` hacen las cuentas y los notebooks las
-recorren, con cada gráfico entre su pregunta y su lectura. Están guardados con sus
-salidas, así que se leen sin ejecutar nada.
+Cada método se desarrolla en su notebook; acá van las decisiones que más pesan.
 
-| Notebook | La pregunta | Gráficos |
-|---|---|---|
-| [`01_accesibilidad`](notebooks/01_accesibilidad.ipynb) | ¿Qué tan conectada está cada propiedad a la red de transporte, y el mercado lo paga en el precio? Capas, medida, cobertura y forma de H2 | 01 a 03 |
-| [`02_costos_del_propietario`](notebooks/02_costos_del_propietario.ipynb) | ¿Cuánto le queda al inversor después de los costos, y le gana a una ON? ABL segmentado, costos de entrada, TIR, refacción y sensibilidad | 04 y 05 |
-| [`03_modelo_alquiler`](notebooks/03_modelo_alquiler.ipynb) | ¿Cuánto se puede confiar en el alquiler estimado? Comparación contra una referencia, qué paga el mercado y la banda del KPI 4 | 06 a 08 |
-| [`04_validacion`](notebooks/04_validacion.ipynb) | ¿Qué hipótesis se sostienen con un contraste formal, con qué magnitud, y cuáles cambian la decisión? | 09 y 10 |
-| [`05_sintesis_atributos`](notebooks/05_sintesis_atributos.ipynb) | ¿Se pueden resumir los 29 atributos del aviso en pocos ejes, y hay tipos de propiedad que rinden distinto en el mismo barrio y tamaño? PCA, MCA, micro-mercados y por qué no entran al modelo | 11 y 12 |
-| [`06_decision`](notebooks/06_decision.ipynb) | ¿Conviene comprar, qué propiedad, y tradicional o temporal? La función de decisión para P1 a P3, cuánto distingue y cuánto depende de los supuestos | 13 a 15 |
+### La vara: renta fija en dólares al mismo plazo
 
-La limpieza, la minería de texto y el EDA de la 2da entrega no se repiten: están en sus
-notebooks 01 a 03, y esta carpeta parte de su resultado.
+La alternativa del inversor son las obligaciones negociables corporativas en dólares de
+primera línea: con el mismo capital, en dólares y con riesgo argentino, igual que el
+inmueble. `src/curva_on.py` arma una curva por plazo:
 
----
+- **Instrumentos**: 31 ON bullet a tasa fija de YPF, Pampa, Pan American, Pluspetrol,
+  TGS y Telecom. Solo bullet: con amortización parcial el plazo no es el vencimiento.
+- **Términos** (cupón, frecuencia, vencimiento): transcriptos del *Reporte de
+  Obligaciones Negociables 2T2026* de Criteria (`data/external/on_terminos.csv`).
+- **Precios**: API pública de data912.com (`/live/arg_corp`, precios de BYMA en dólares
+  MEP). La consulta se guarda con su fecha en `data/external/on_precios.csv`; con
+  `--actualizar` se vuelve a consultar.
+- **TIR**: efectiva anual, la misma convención que la TIR del inmueble. La API no dice
+  si el precio incluye el cupón corrido; se tomó como precio limpio porque, con esa
+  convención, la diferencia contra la TIR de Criteria no crece con el cupón corrido. La
+  otra convención se informa como sensibilidad.
+- **La vara de P1** es la mediana de las ON que vencen a 5 años ± 1; la banda que usa la
+  sensibilidad va de su p25 a su p75.
 
-## Accesibilidad al transporte
+### Accesibilidad y espacios verdes
 
-H2 no se puede cerrar con el subte solo, porque el subte no cubre el sur ni el oeste de
-la Ciudad. `espacial.py` mide, para cada aviso, la distancia a la red de subte, a la de
-tren y a la de Metrobús, y las combina en una medida.
+`espacial.py` mide, para cada aviso, la distancia en línea recta a la estación más
+cercana de subte, tren o Metrobús (`dist_transporte_m`), y a la plaza y al parque más
+cercanos. H2 se estima con efectos fijos de barrio: sin el barrio, la distancia mide
+centralidad. La medida no ve barreras, frecuencias ni destinos, y no incluye el
+Premetro: se lee como una cota inferior del esfuerzo de llegar a la red (notebook 01).
 
-### La medida, en una frase
+### Costos del propietario
 
-> **`dist_transporte_m`: los metros, en línea recta, hasta la estación más cercana de
-> cualquiera de las tres redes masivas de la Ciudad (subte, tren o Metrobús).**
-
-Es el mínimo de las tres distancias, sin pesos. Lo que un inquilino paga todos los días
-es la caminata hasta la red: una vez adentro, cualquiera de las tres lo conecta con el
-resto de la Ciudad. Se descartaron dos alternativas:
-
-- **Un índice ponderado** exigiría pesar cada modo por su frecuencia, y no hay un dato
-  de frecuencia por estación que se pueda unir. Los pesos serían inventados.
-- **Contar cuántos modos hay cerca** confunde un conteo con una tasa: tener tres redes a
-  300 m no da el triple de acceso que tener una.
-
-Las distancias por modo (`dist_subte_m`, `dist_tren_m`, `dist_metrobus_m`) quedan como
-columnas, junto con `modo_cercano` y `estacion_cercana`.
-
-### Qué agrega la combinación frente al subte solo
-
-Porcentaje de los avisos de cada comuna con una estación a menos de 800 m, que son
-10 minutos a pie (`supuestos.RADIO_CAMINATA_M`):
-
-| Comuna | Avisos | Subte | Tren | Metrobús | **Combinada** | La red más cercana no es el subte |
-|---|---|---|---|---|---|---|
-| 4 (sur) | 412 | 39,1% | 23,8% | 63,8% | **74,5%** | 85,4% |
-| 8 (sur) | 197 | 0,0% | 29,4% | 55,8% | **72,1%** | 100,0% |
-| 9 (oeste) | 395 | 2,0% | 18,2% | 37,0% | **45,6%** | 96,2% |
-| 10 (oeste) | 616 | 6,5% | 38,3% | 69,6% | **70,3%** | 99,7% |
-| 11 (oeste) | 902 | 0,0% | 47,5% | 56,0% | **75,3%** | 100,0% |
-| Toda la Ciudad | 12.090 | 62,2% | | | **88,4%** | 51,8% |
-
-Con el subte solo, las comunas 8 y 11 aparecían sin acceso a la red: ningún aviso tenía
-una boca a 800 m. Con las tres redes, el 72,1% y el 75,3% tiene una estación a esa
-distancia. En toda la Ciudad, la combinación pone dentro del radio a 3.164 avisos que el
-subte dejaba afuera (26,2%). Tabla completa, con las 15 comunas, en
-`data/processed/reporte_espacial.txt`.
-
-### Lo que la medida no mide
-
-**Una distancia en línea recta no es accesibilidad real.** La medida:
-
-- **no ve barreras**: un aviso a 400 m de una estación en línea recta puede estar a
-  1.500 m caminando si en el medio hay vías, una autopista o el Riachuelo;
-- **no ve la frecuencia**: una estación de tren con un tren por hora no equivale a un
-  subte cada cuatro minutos, y en la medida valen lo mismo;
-- **no ve el destino**: estar cerca de una estación no dice adónde se llega desde ella
-  ni en cuánto tiempo;
-- **no incluye el Premetro**, que sirve a Villa Soldati y Villa Lugano. No está en
-  las capas de subte del portal, así que en el sur la medida exagera la distancia a la
-  red.
-
-Por eso se la lee como una **cota inferior del esfuerzo de llegar a la red**, no como una
-medida de qué tan bien conectado está un inmueble. Medir tiempo de viaje requeriría la
-red de calles y los horarios de cada servicio, que este trabajo no integra.
-
-### Nivel territorial
-
-La medida es **por aviso, no por barrio**. En 20 de los 44 barrios con al menos 30
-avisos conviven avisos a menos y a más de 800 m de la red, así que un promedio barrial
-les asignaría a todos el mismo acceso. En Mataderos, el 10% más cercano está a 461 m o
-menos y el 10% más lejano, a 2.358 m o más. Los resúmenes por zona se informan por
-comuna y como tasas, porque la cartera de RE/MAX no pesa lo mismo en cada comuna.
-
-### Cobertura del dato
-
-7 de los 12.097 avisos (0,06%) no tienen coordenadas y quedan sin distancia, como nulo,
-nunca como cero. **No se concentran en el sur**: hay 1 en Villa Lugano (comuna 8), 2 en
-la comuna 10 (Floresta y Villa Real) y 4 en Palermo. Como tasa, el máximo es 0,51%, en
-la comuna 8, que equivale a 1 aviso de 198. No sesgan la medida.
-
-Las fuentes de cada capa, sus fechas y sus limitaciones están en
-[`informe/FUENTES_EXTERNAS.md`](informe/FUENTES_EXTERNAS.md), fichas 6 a 9.
-
----
-
-## H2: precio del m² y distancia a la red
-
-> **H2.** El precio del m² decrece con la distancia al transporte, y existe un radio de
-> influencia a partir del cual el beneficio se diluye.
-
-`py src/accesibilidad.py` estima la **magnitud y la forma** de la relación con el método
-declarado desde la 1ra entrega: regresión de log(USD/m²) sobre la distancia, **con efectos
-fijos de barrio**. Base: 10.743 avisos de venta. El contraste formal está en la sección
-[Hipótesis](#hipótesis-los-tests-formales): la versión lineal no se sostiene y H2 se
-reformula como un escalón a 1 km.
-
-**Sin el barrio se mide centralidad.** Sin efectos fijos, cada kilómetro hasta la red
-resta 12,9% al m². Con el barrio fijo, la pendiente baja a −6,2% por km, y la distancia
-agrega **0,0018 de R²** a un modelo donde el barrio solo explica 0,422.
-
-**La forma: plana hasta 1 km, con un escalón después.** Efecto sobre el m² contra los
-avisos a menos de 300 m de la red, con barrio fijo y controles del inmueble (tipo,
-superficie, antigüedad, a reciclar, amenities, cochera):
-
-| Distancia a la red (m) | 300-600 | 600-1.000 | 1.000-1.500 | 1.500+ |
-|---|---|---|---|---|
-| Avisos | 3.658 | 2.023 | 512 | 163 |
-| Todos los tipos | +2,3% | −0,6% | **−6,0%** | −7,2% |
-| Solo departamentos | +2,3% | −0,6% | **−6,2%** | −1,6% |
-
-Los controles importan. Sin ellos, el tramo de 1.500 m o más daba −16,0%, pero el 64% de
-esos avisos son casas y PH (contra 12% a menos de 300 m), que tienen otro precio del m²
-por razones que no son la distancia. El escalón robusto es el de 1 a 1,5 km.
-
-**Radio de influencia: entre 600 y 1.000 m.** Un modelo con quiebre ajusta mejor con
-umbral de 600 m (−8,1% por km más allá), pero la diferencia de R² entre el mejor y el
-peor umbral es de 0,001: el quiebre se lee como un rango, no como un número. El perfil
-por tramos lo ubica a partir de 1 km.
-
-**Por modo, con controles,** el efecto viene del subte (−6,1% a más de 1,5 km). Ni el tren
-(−0,9%) ni el Metrobús (−1,3%) penalizan la lejanía, y estar a 300-1.500 m del tren
-no vale menos que estar al lado.
-
-**Un antecedente que no se replica.** Un análisis exploratorio previo del grupo había
-encontrado una correlación intra-barrio negativa con la distancia al subte a más de
-1 km. Con estos datos, el Spearman entre el precio descontado el promedio del barrio y la
-distancia al subte es **0,000** en los 3.375 avisos a más de 1 km.
-
-**Lectura.** La primera mitad del enunciado propuesto se sostiene: *la accesibilidad ya
-está incorporada en el precio del barrio*. Dentro del barrio, estar a 300 m o a 1 km de
-la red no cambia el m². La segunda mitad se sostiene con una precisión: *salvo donde el
-transporte escasea*, entendido como el aviso y no el barrio. El 6% de los avisos a más
-de 1 km de las tres redes cotiza alrededor de 7% menos que sus comparables del mismo
-barrio. Para P2, esto significa que el inversor no paga una prima por estar más cerca de
-una estación dentro de su barrio, y que el descuento lejos de la red es chico y está
-concentrado en pocos avisos.
-
----
-
-## Costos del propietario: antes y después
-
-### ABL segmentado
-
-El ABL dejó de ser un 3,80% plano del alquiler. Ahora se calcula por propiedad con la
-**Ley Tarifaria 2026** (Ley 6927, anexo, arts. 41 a 45):
-
-- el Impuesto Inmobiliario, con su escala progresiva;
-- la Tasa ABL, con el **coeficiente geográfico de cada barrio**;
-- el recargo, el mínimo y el tope.
-
-La base es la Valuación Fiscal Homogénea (VFH), que AGIP no publica por partida. Se
-aproxima como `proporción × USD/m² mediano del barrio y tipo × superficie`, que sigue
-cómo la define el Código Fiscal (art. 288: parte del valor de mercado por m² de la zona,
-con tope en el 20% del valor de mercado). Así queda segmentado por barrio, superficie y
-tipo de propiedad.
-
-La proporción **no tiene fuente publicada**: es una estimación propia. Se calibra en
-14,99% para que la unidad de referencia (2 ambientes, 40 a 60 m²) siga pagando 3,80%. De
-ese modo el ajuste **redistribuye** el ABL sin cambiar su nivel, y el nivel se prueba
-aparte con la proporción en el tope legal del 20%. Antes de usarla, la fórmula se validó
-contra un sistema externo: reproduce al peso los siete ejemplos que calcula Roomix con la
-misma ley (`test_costos.py` y notebook 02).
-
-| ABL como % del alquiler, por quintil de rentabilidad bruta (base confiable) | Q1 (rinde menos) | Q2 | Q3 | Q4 | Q5 (rinde más) |
-|---|---|---|---|---|---|
-| Plano (2da entrega) | 3,80% | 3,80% | 3,80% | 3,80% | 3,80% |
-| Segmentado | 4,65% | 4,29% | 3,99% | 3,62% | 3,19% |
-
-El plano les cobraba de menos a las unidades que rinden poco y de más a las que rinden
-mucho: el ABL sigue al valor del inmueble, y el alquiler no lo sigue en la misma
-proporción.
-
-### Costos de entrada y refacción
-
-Con fuente y fecha en `supuestos.py`, secciones 3e y 3f. El escenario base usa el
-**piso de cada rango publicado**, así que el efecto que se informa es un mínimo.
+- **ABL segmentado** con la Ley Tarifaria 2026 (Ley 6927, arts. 41 a 45): Impuesto
+  Inmobiliario progresivo, Tasa ABL con el coeficiente geográfico de cada barrio,
+  recargo, mínimo y tope. La Valuación Fiscal Homogénea no se publica por partida: se
+  aproxima como una proporción del m² de mercado de la zona, calibrada para que la
+  unidad de referencia pague el porcentaje anterior. La fórmula reproduce los siete
+  ejemplos de un calculador externo (`test_costos.py`).
+- **Costos de entrada**, con el piso de cada rango publicado (el efecto que se informa
+  es un mínimo):
 
 | Costo | Base | Alto | Fuente |
 |---|---|---|---|
 | Comisión inmobiliaria del comprador | 3% | 4% | CUCICBA, 09-01-2026 (Ley 2340, mod. Ley 5859) |
 | Escribano | 1% | 2% | La Nación, 01-05-2026 |
 | Certificados, informes e inscripción | 0,2% | 0,4% | La Nación, 01-05-2026 |
-| Impuesto de Sellos, mitad del comprador | 1,35% hasta ARS 226,1 millones; 1,75% arriba | ídem | Ley 6927, anexo, art. 34; reparto por mitades: La Nación, 01-05-2026 |
-| **Total, mediana** | **5,55%** | **7,75%** | |
-| Refacción de una unidad a reciclar | Baño USD 5.573 + cocina USD 6.220 + pintura | Integral, ARS 1.350.000/m² + IVA | Reporte Inmobiliario (enero de 2026) y Sui Color, vía La Nación, 30-03-2026; RenovArqui, febrero de 2026 |
+| Impuesto de Sellos, mitad del comprador | 1,35% hasta ARS 226,1 millones; 1,75% arriba | ídem | Ley 6927, art. 34; La Nación, 01-05-2026 |
+| Refacción de una unidad a reciclar | Baño USD 5.573 + cocina USD 6.220 + pintura | Integral, ARS 1.350.000/m² + IVA | Reporte Inmobiliario y Sui Color vía La Nación, 30-03-2026; RenovArqui, 02-2026 |
 
-Ninguna fuente aclara si la comisión y el escribano llevan IVA, así que no se sumó. Una
-guía de Roomix sobre refacción quedó afuera: no cita fuente, y su refacción integral de
-un 50 m² sale más barata que el baño y la cocina de Reporte Inmobiliario.
+- **TIR a 5 años**: la tasa que iguala lo que se pone al comprar (precio, costos de
+  entrada y refacción) con 5 años de alquiler neto y la reventa al mismo precio en
+  dólares. Es la cifra comparable con la TIR de una ON del mismo plazo.
+- **Suba del alquiler al refaccionar**: un supuesto, el efecto de `reciclado` en el
+  modelo, porque el de `a_reciclar` sale de 2 alquileres. Se prueba sin suba y con el
+  efecto completo.
+- **Riesgo legal**: limitación declarada, sin número. No hay una fuente que publique la
+  frecuencia o el costo de desalojos e impagos en CABA.
 
-**La refacción y el descuento de H3.** Las unidades a reciclar cotizan 23,3% más barato
-por m² que sus comparables, lo mismo que en la 2da entrega y recalculado en la misma
-corrida. Sobre el precio de la unidad, ese descuento equivale a 30,3%. La refacción
-mínima cuesta una mediana de 13,5% del precio y el descuento la cubre en el 94% de las
-unidades: ahí el descuento sí es una oportunidad. La integral cuesta 83,4% y no la cubre
-en ninguna. Refaccionada, la unidad se alquila 14,4% más según el modelo. Ese beneficio
-entra en la TIR, para no cobrar la obra sin su efecto.
+### El modelo de alquiler
 
-**Riesgo legal: limitación declarada, sin número.** Juicios de desalojo, inquilinos que
-no pagan, cambios de régimen como los de la Ley 27.551 y el DNU 70/2023. No hay una
-fuente que publique su frecuencia o su costo para CABA, y estimarlo sería peor que no
-tenerlo. No entra en ningún KPI, y todo resultado de este trabajo es optimista en esa
-medida.
+Un Ridge sobre el logaritmo del alquiler, con 21 predictoras elegidas por disponibilidad
+y sentido económico. Se compara fuera de muestra, en tres semillas, contra una referencia
+simple (la mediana del barrio y tramo de superficie), contra la misma regresión con las
+variables espaciales y contra gradient boosting. Una alternativa reemplaza al Ridge solo
+si mejora el R² en 0,01 en todas las semillas, un criterio declarado antes de comparar;
+ninguna lo cumple, y los coeficientes del Ridge se leen como cuánto paga el mercado por
+cada característica. La **banda** de cada propiedad son los percentiles 10 y 90 de su
+alquiler: regresión cuantílica calibrada por grupo de evidencia del barrio
+(*conformalized quantile regression*). `modelo_alquiler.joblib` guarda la metadata y el
+hash de los datos de entrenamiento, que `test_modelo.py` verifica (notebook 03).
 
-### TIR a 5 años
+### Hipótesis
 
-Los costos de entrada se pagan una vez y no vuelven al vender, así que no se pueden
-restar de una rentabilidad anual. Se suma una columna, `tir_5a_pct`.
+Los cuatro tests se declararon antes de correrlos, con α = 0,05, y cada uno cierra con el
+p-valor, el tamaño del efecto en unidades del inversor, un intervalo del 95% y si cambia
+la decisión. Con miles de observaciones casi todo es significativo, así que se lee el
+efecto (notebook 04 y tabla del informe).
 
-> **TIR a 5 años:** la tasa anual que iguala lo que se pone al comprar (precio, costos
-> de entrada y refacción) con lo que se recibe (5 años de alquiler neto y la reventa al
-> mismo precio en dólares).
-
-Es la cifra comparable con la banda de retorno mínimo, que es la TIR de una ON a un
-plazo parecido. Sin costos de entrada es igual a la neta. No incluye apreciación,
-costos de salida ni meses de obra sin alquiler.
-
-### Antes y después
-
-Base: 9.203 ventas con estimación confiable; barrios con al menos 30 ventas. Piso de la
-banda de retorno mínimo: 7,10%.
-
-| | Mediana | Barrios sobre el piso | Top 5 del ranking |
-|---|---|---|---|
-| **Antes**: neta, ABL plano | 5,67% | 1 (Constitución) | Constitución, San Cristóbal, San Telmo, Balvanera, Liniers |
-| Neta, ABL segmentado | **5,65%** | 1 (Constitución) | Constitución, San Cristóbal, San Telmo, Liniers, Balvanera |
-| TIR a 5 años, ABL segmentado + costos de entrada | **4,27%** | **0** | Constitución, San Telmo, San Cristóbal, Liniers, San Nicolás |
-
-- **El ABL segmentado redistribuye, pero no mueve la conclusión.** La neta mediana
-  baja 0,02 pp y el ranking casi no cambia (Spearman 0,996 contra el plano): Villa
-  Urquiza sube 2 puestos y ningún otro barrio se mueve más de uno. Constitución
-  pasa de 8,17% a 8,35%, porque su ABL baja: es barato, y el plano le cobraba de más.
-- **Los costos de entrada sí la mueven.** Restan 1,38 pp por año en el horizonte, y
-  ningún barrio supera el piso. Constitución, el único que lo superaba, queda en una
-  TIR de 6,44%. El hallazgo central se refuerza: **la propiedad mediana no le gana a una
-  ON en dólares, y con los costos de comprar la distancia al piso pasa de 1,45 a 2,83
-  puntos.**
-- **P3 casi no cambia.** Con el ABL de cada celda en los dos modos, la ocupación de
-  equilibrio mediana del temporal pasa de 65,3% a 65,5% (de 51,5% a 51,7%
-  autogestionado), y con 53% de ocupación el temporal gana en 2 de 47 celdas, antes 3.
-
-### Sensibilidad
-
-La grilla de la 2da entrega (vacancia × gastos planos) se conserva. Se suma una grilla B:
-vacancia (4% a 12%) × definición del ABL (plano, segmentado, segmentado con la VFH en el
-tope legal) × costos de entrada (sin, base, alto), con 45 escenarios en
-`sensibilidad_supuestos.csv`.
-
-- **Nivel:** la mediana va de 3,33% a 5,78%.
-- **Piso:** los barrios sobre el piso van de 0 a 2. Ninguno lo supera en un escenario
-  con costos de entrada.
-- **Ranking:** la definición del ABL lo mueve hasta un Spearman de 0,996, y los costos
-  de entrada, hasta 0,991.
-
-Ninguna definición reordena el ranking de manera apreciable, aunque el quinto puesto
-cambia entre escenarios (el top 5 es idéntico al base en 10 de 45). Todas las que suman
-costos de entrada dejan a toda la Ciudad debajo de la vara.
-
----
-
-## Modelo de alquiler
-
-Todo lo que el trabajo dice sobre rentabilidad depende del alquiler estimado, así que el
-modelo se compara contra una referencia razonable y se evalúa fuera de muestra.
-Desarrollo completo en el [notebook 03](notebooks/03_modelo_alquiler.ipynb).
-
-### La tabla comparativa
-
-`py src/comparacion_modelos.py`: validación cruzada de 5 particiones, repetida con tres
-semillas (42, la del modelo vigente, 7 y 2026). Promedio de las tres, con el rango
-entre corchetes:
-
-| Modelo | R² en log | Error relativo mediano | Error, < 35 m² | Error, 100+ m² |
-|---|---|---|---|---|
-| Mediana de barrio × tramo de superficie (referencia) | 0,750 [0,743, 0,755] | 15,05% | 12,5% | 22,7% |
-| **Ridge vigente, 21 predictoras** | **0,847 [0,846, 0,848]** | **11,42%** | 11,1% | 17,0% |
-| Ridge + variables espaciales | 0,847 [0,846, 0,848] | 11,56% | 10,9% | 17,1% |
-| Gradient boosting, mismas variables, afinado | 0,844 [0,842, 0,849] | 11,41% | 9,4% | 19,2% |
-
-**La decisión.** El Ridge le gana a la referencia con claridad: casi diez puntos de R²
-y casi cuatro de error. Ninguna alternativa le gana a él. Las variables espaciales no
-agregan (coherente con H2: la accesibilidad ya está en el barrio, que es predictora), y
-el boosting empata dentro del rango de las semillas. El criterio se declaró antes de
-mirar el resultado (`supuestos.MEJORA_MINIMA_R2`): una alternativa reemplaza al Ridge
-solo si mejora el R² en 0,01 en todas las semillas. **El Ridge se queda, y el alquiler
-estimado y los KPIs 1 a 3 no cambian.** Sus coeficientes se leen como cuánto paga el
-mercado por cada característica, y esa lectura es parte del producto para el inversor.
-
-**Las variables espaciales.** Son las seis distancias de `espacial.py`: al subte, al
-tren, al Metrobús, a la red más cercana de las tres, y a la plaza y al parque más
-cercanos. Se probaron solo en la variante "Ridge + espaciales": el modelo vigente nunca
-las incluyó y sigue con las 21 predictoras de la 2da entrega. No se eliminaron del
-trabajo: siguen como columnas del dataset, se usan para H2 y el tablero muestra la
-distancia y el modo de transporte en la ficha de cada propiedad.
-
-### La banda del KPI 4
-
-Hasta la 2da entrega, la banda de cada propiedad era su estimación más y menos el error
-mediano de su tramo de superficie. Ahora son los **percentiles 10 y 90** de su alquiler:
-una regresión cuantílica con las variables del Ridge, calibrada por grupo de evidencia
-del barrio con *conformalized quantile regression* (Romano, Patterson y Candès, 2019).
-
-| Banda | Alquileres observados dentro, fuera de muestra |
+| Hipótesis | Test |
 |---|---|
-| 2da entrega: estimación ± error mediano del tramo | 50,1% |
-| Regresión cuantílica sola | 77,5% |
-| **Regresión cuantílica calibrada** | **81,6%** (objetivo 80%; entre 80% y 84% en cada grupo de evidencia) |
+| H1 — la rentabilidad cae con el precio del m² del barrio | Spearman unilateral con p-valor por permutación, repetido por tramo de superficie con Holm |
+| H2 — el m² cae con la distancia al transporte | Regresión con efectos fijos de barrio y controles, errores agrupados por barrio |
+| H3 — las unidades a reciclar cotizan con descuento | Van Elteren por celda barrio × tramo de superficie |
+| H4 — la antigüedad pesa más en venta que en alquiler | Wald sobre dos regresiones con efectos fijos de celda, bootstrap por celdas |
 
-**Esto no mejora la estimación puntual del alquiler, que no cambia.** Mejora lo que se
-sabe sobre cuánta confianza merece. La banda anterior prometía una precisión que no
-tenía: por construcción, dejaba afuera a la mitad. La nueva es más ancha (3,45 puntos de
-rentabilidad bruta en la mediana, 4,92 en las unidades de más de 100 m²) y dos de cada
-tres propiedades tienen una banda que contiene la rentabilidad mediana del mercado. Es
-el insumo del criterio de P2 en la función de decisión, y la banda que el tablero
-muestra junto a cada neta.
+### Síntesis de atributos
 
-Un resultado que no era el esperado: los barrios con menos de 10 alquileres no se
-predicen peor fuera de muestra (la banda sin calibrar los cubría en 80,7%), así que su
-banda no necesita ser mucho más ancha. El ancho depende más del tamaño de la propiedad
-que de cuántos datos hay en su barrio.
+PCA y MCA sobre los atributos del aviso, y micro-mercados por k-medias. Es un análisis
+informativo: no entra al modelo de alquiler porque no mejora el R² según el mismo
+criterio (notebook 05). Su hallazgo, con precios observados, es que las torres nuevas
+con amenities cuestan más por m² de lo que se alquilan de más.
 
-### El modelo guardado
+### La función de decisión
 
-`modelo_alquiler.joblib` guarda, además del pipeline y la banda, la versión de
-scikit-learn, la fecha de entrenamiento, el hash SHA-256 de los datos de entrenamiento,
-la lista de predictoras y las métricas de validación. `test_modelo.py` verifica que el
-hash coincida con los alquileres de entrada: si no, el modelo es de otra corrida.
+`src/decision.py` implementa y evalúa las tres decisiones (notebook 06):
 
----
-
-## Hipótesis: los tests formales
-
-Los cuatro tests que la 2da entrega dejó declarados, ejecutados en el
-[notebook 04](notebooks/04_validacion.ipynb). Con 9.203 ventas casi cualquier efecto da
-significativo, así que cada test cierra con el p-valor, el tamaño del efecto en
-unidades del inversor, un intervalo del 95% y si cambia la decisión. α = 0,05, fijado
-antes de correrlos (`supuestos.ALFA`).
-
-| Hipótesis | Test | H₀ | Efecto | IC 95% | ¿Cambia la decisión? |
-|---|---|---|---|---|---|
-| **H1** — la rentabilidad cae con el precio del m² del barrio | Spearman unilateral, p por permutación; repetido en 5 tramos de superficie con Holm | Se rechaza (p < 0,001), también en los 5 tramos | −0,98 pp de bruta por cada USD 500/m² del barrio (ρ = −0,90) | [−1,16, −0,81] pp | **Sí**: el barrio es la palanca más fuerte |
-| **H2** — el precio del m² cae con la distancia al transporte | Regresión con efectos fijos de barrio y controles, errores agrupados por barrio | Lineal: **no se rechaza** (p = 0,081). Escalón a 1 km: se rechaza (p = 0,002) | −6,7% del m² a más de 1 km de la red | [−10,9, −2,3]% | Poco: afecta al 6% de los avisos |
-| **H3** — las unidades a reciclar cotizan con descuento | Van Elteren, celdas barrio × superficie | Se rechaza (p < 0,001), en precio y en rentabilidad | −23,3% del m²; +1,12 pp de bruta | [−26,8, −19,2]%; [+0,74, +1,52] pp | Sí, si la refacción es mínima |
-| **H4** — la antigüedad pesa más en venta que en alquiler | Wald sobre dos regresiones con efectos fijos de celda, bootstrap por celdas | Se rechaza (p < 0,001) | −5,7% del m² de venta y −2,6% del alquiler por década: +0,23 pp de bruta por década | +2,4% a +4,3% relativo por década | Poco: menos de 1 pp en 40 años |
-
-**H2 se reformula.** Con los errores agrupados por barrio, la pendiente lineal no es
-significativa; con el error común habría salido muy significativa (t = −4,07 contra
-−1,42). La versión que los datos sostienen es: *dentro del barrio, la distancia a la red
-no cambia el precio del m² hasta 1 km; más allá, el m² vale alrededor de 7% menos.*
-
-**Supuestos verificados.** Los precios tienen cola derecha larga, así que H1 y H3 usan
-tests de rangos y H2 y H4 trabajan sobre el logaritmo. Los errores de H2 se agrupan por
-barrio y el bootstrap de H4 remuestrea celdas: los avisos de un mismo barrio o celda no
-son independientes. H4 usa solo antigüedad observada. Las piezas estadísticas están en
-`src/validacion.py` y se verifican contra scipy en `src/test_validacion.py`.
-
----
-
-## Síntesis de atributos y micro-mercados
-
-¿Se pueden resumir los atributos del aviso en pocos ejes, y hay tipos de propiedad que
-rinden distinto dentro de un mismo barrio? Es el "PCA/MCA sobre las dummies y clustering
-de propiedades" que había planteado la 2da entrega. Desarrollo completo en el
-[notebook 05](notebooks/05_sintesis_atributos.ipynb).
-
-**Los ejes.** PCA sobre las 29 dummies físicas del aviso, y MCA sobre las mismas más tipo,
-tramo de superficie, tramo de antigüedad y disposición. Los dos métodos encuentran los
-mismos ejes. Con la corrección de Benzécri, tres resumen el 98% de la inercia:
-
-| Eje | Inercia corregida | Qué es | Contra lo que el dataset ya tiene |
-|---|---|---|---|
-| D1 | 70% | Edificio nuevo con amenities | Correlación 0,95 con `n_amenities` |
-| D2 | 21% | Tamaño y categoría | 0,86 con el logaritmo de la superficie |
-| D3 | 7% | PH o casa contra departamento clásico | 0,56 con ser PH o casa |
-
-**Los micro-mercados.** k-medias sobre esos tres ejes da cuatro grupos muy estables (ARI
-de 0,98 o más en submuestras del 80%), que conviven dentro de casi todos los barrios:
-
-| Micro-mercado | Avisos | m² de venta mediano | Bruta mediana |
-|---|---|---|---|
-| Departamento estándar: 47 m², edificio viejo, casi sin amenities | 47% | USD 1.907 | 7,2% |
-| Torre con amenities: 2 años de antigüedad, casi la mitad a estrenar o en pozo | 19% | USD 2.774 | 6,2% |
-| Departamento clásico grande: 92 m², con dependencia y cochera | 18% | USD 2.122 | 6,6% |
-| PH y casas: 166 m², con patio | 16% | USD 1.207 | 8,8% |
-
-**El hallazgo, con precios observados.** Contra un departamento estándar del mismo barrio,
-tamaño y tipo, la torre con amenities cuesta **33% más por m²** (IC 95% [30, 37]) y se
-alquila solo **17% más** (IC 95% [12, 23]): rinde alrededor de 0,9 puntos menos. Se mide
-con precios y alquileres publicados, no con la rentabilidad estimada, porque el numerador
-de esa rentabilidad sale de un modelo que ya usa estas dummies. Precisa el hallazgo de la
-2da entrega: lo que rinde menos es el paquete "edificio nuevo con amenities", no solo la
-amenity.
-
-**Por qué no entra al modelo de alquiler.** Se probó con la validación del
-[notebook 03](notebooks/03_modelo_alquiler.ipynb). La tabla muestra la peor de las tres
-semillas:
-
-| Variante | Mejora de R² sobre el Ridge vigente |
+| Decisión | Criterio |
 |---|---|
-| 3 componentes en lugar de las 14 dummies | −0,0075 |
-| Ridge vigente + 3 componentes | +0,0059 |
-| Ridge vigente + micro-mercado | +0,0008 |
-| Las 29 dummies, como techo | +0,0082 |
+| **P1** — ¿comprar? | Neta del escenario pesimista (alquiler del percentil 10) sobre la vara; como versión estricta, la TIR pesimista a 5 años con costos de entrada |
+| **P2** — ¿cuál? | A sobre B solo si sus bandas de neta no se superponen; la frontera son las que ninguna otra supera |
+| **P3** — ¿tradicional o temporal? | El temporal, solo si la ocupación sostenible supera la de equilibrio de su celda |
 
-Ninguna variante alcanza el 0,01 de `supuestos.MEJORA_MINIMA_R2`, que es el mismo
-criterio que dejó afuera a las variables espaciales. Además:
+El **universo** son las ventas con estimación confiable, dentro del presupuesto, en el
+soporte del modelo (celdas tipo × tramo con al menos 30 alquileres observados: casas y PH
+quedan afuera), con un precio publicado que es el total y que la revisión a mano no
+excluyó. La **sensibilidad** mueve un supuesto por vez (vacancia, gastos, ABL, costos de
+entrada, refacción, suba por refacción, banda de retorno, horizonte y margen por
+liquidez) y dos extremos.
 
-- reemplazar las dummies por componentes pierde R² y la lectura de los coeficientes como
-  cuánto paga el mercado por cada característica;
-- los ejes y los grupos se arman con variables que el modelo ya tiene.
+### Decisiones metodológicas
 
-**Queda como análisis informativo.** No cambia el alquiler estimado, los KPIs ni el
-dataset.
-
----
-
-## Función de decisión
-
-`py src/decision.py` implementa las tres decisiones formuladas en la 2da entrega, con los
-criterios que se declararon entonces, y las evalúa. Agrega 14 columnas al dataset
-analítico, que son las que usa el tablero. Desarrollo completo en el
-[notebook 06](notebooks/06_decision.ipynb).
-
-| Decisión | Criterio | Resultado |
-|---|---|---|
-| **P1** — ¿comprar? | Neta del escenario pesimista (alquiler del percentil 10) sobre el techo de la banda de retorno (7,60%) | **No, para la propiedad típica.** Pasan 18 de 4.484 (0,4%), y 4 con costos de entrada. Las que pasan cuestan alrededor de 30% menos por m² que su celda: hay que verificar por qué |
-| **P2** — ¿cuál? | A sobre B solo si sus bandas de neta no se superponen | **Una lista corta, no un ranking.** El 7,2% de los pares se distingue. 140 propiedades no están dominadas por ninguna; dentro de ellas se desempata por el ancho de la banda |
-| **P3** — ¿tradicional o temporal? | El temporal, solo si la ocupación sostenible supera la de equilibrio | **Tradicional.** Equilibrio mediano de 65,5% con gestión tercerizada; autogestionado baja a 51,7% |
-
-**El soporte del modelo, un filtro nuevo.** Sin él, P1 y P2 recomendaban casas de 6 a 10
-ambientes con netas de 15% a 27%: el modelo les extrapolaba alquileres de hasta
-unos USD 5.200, con 14 alquileres de casas y 44 de PH observados. Solo entran a las
-recomendaciones las propiedades cuya celda tipo × tramo de superficie tiene 30
-alquileres observados o más (`supuestos.MIN_ALQ_SOPORTE`). Quedan afuera 714 casas y PH
-dentro del presupuesto.
-
-**La evaluación.** En 22 escenarios que mueven un supuesto por vez, más dos extremos:
-
-- **P1 es robusto en la conclusión:** pasan entre 3 y 51 propiedades, y con costos de
-  entrada nunca más de 5. La lista sí cambia: con 1 punto de margen por liquidez quedan
-  6, y con el piso de la banda en lugar del techo, 33.
-- **La frontera de P2 casi no se mueve.** La vacancia y los gastos escalan todas las
-  netas por igual y no cambian qué banda domina a cuál; solo el ABL plano la achica a
-  92. Los pares distinguibles quedan entre 7% y 8% en todos los escenarios.
-- **P3 no cambia de signo** con ninguna vacancia del tradicional.
-
-En el tablero, P1 aparece como una lista **a verificar** y P2 como rangos ordenados por
-ancho de banda, para que ninguna de las dos se lea como un ranking de compra.
-
----
-
-## Decisiones metodológicas
-
-Las que más pesan en los resultados, con dónde se justifican:
-
-| Decisión | Por qué | Dónde |
-|---|---|---|
-| La accesibilidad es la distancia a la estación más cercana de las tres redes, sin pesos | Un índice ponderado necesitaría frecuencias por estación, que no se pueden unir | [Accesibilidad](#accesibilidad-al-transporte) |
-| H2 con efectos fijos de barrio y errores agrupados por barrio | Sin el barrio se mide centralidad; con el error común, la pendiente parecía significativa y no lo es | [H2](#h2-precio-del-m²-y-distancia-a-la-red), notebook 04 |
-| El ABL segmentado se calibra a la unidad de referencia | Aísla la redistribución de un cambio de nivel, que se prueba aparte con la VFH en el tope legal | [Costos](#costos-del-propietario-antes-y-después) |
-| Los costos de entrada en el piso de cada rango, y la TIR a 5 años como cifra comparable | El efecto que se informa es un mínimo; un costo que se paga una vez no se resta de una renta anual | [Costos](#costos-del-propietario-antes-y-después) |
-| Un modelo reemplaza al Ridge solo si mejora el R² en 0,01 en todas las semillas | Criterio declarado antes de comparar. Dejó afuera al boosting, a las variables espaciales y a la síntesis de atributos | [Modelo](#modelo-de-alquiler), notebooks 03 y 05 |
-| La banda del KPI 4 es cuantílica y calibrada | La anterior cubría el 50% por construcción | [Banda](#la-banda-del-kpi-4) |
-| α = 0,05 fijado antes, y cada test con su efecto en unidades del inversor | Con 9.203 ventas casi todo es significativo | [Hipótesis](#hipótesis-los-tests-formales) |
-| Los micro-mercados se comparan con precios observados, no con la rentabilidad estimada | El numerador de la rentabilidad sale de un modelo que ya usa esos atributos | Notebook 05 |
-| P1 contra el techo de la banda y con el escenario pesimista; P2 por dominancia de bandas; soporte del modelo | Una compra no se deshace barato, y la banda es la incertidumbre real de cada estimación | [Función de decisión](#función-de-decisión) |
-| El tablero no recalcula KPIs: filtra y resume columnas ya materializadas | Cada número de la pantalla coincide con el del informe, y un test lo verifica | [El tablero](#el-tablero) |
-| El simulador sí recalcula, pero con el modelo guardado y parámetros armados por las funciones de `src/` | Tiene que evaluar propiedades que no están en el dataset; un test lo ata a las 10.749 ventas del dataset, en Python y en la página | [El simulador](#el-simulador) |
-| El informe lo escribe un script | Cada cifra narrada sale del dato y no se desincroniza | `src/reporte.py` |
+| Decisión | Por qué |
+|---|---|
+| La vara es la ON al plazo del inversor, no un bono más largo | Un bono más largo paga más por el plazo, no por ser mejor alternativa |
+| P1 sobre el escenario pesimista; P2 por dominancia de bandas | Una compra no se deshace barato, y la banda es la incertidumbre real de cada estimación |
+| Solo entran precios totales, y las listas finales se leen a mano | Un precio que es solo el contado, o una oficina, pasa cualquier filtro de rentabilidad |
+| La suba por refacción es un supuesto con sensibilidad | El coeficiente del modelo se apoya en 2 alquileres |
+| Los costos de entrada y la refacción son parámetros separados | Un escenario sin costos de entrada no puede cobrar la obra sin pagarla |
+| H2 con efectos fijos de barrio y errores agrupados | Sin el barrio se mide centralidad; con el error común la pendiente parecía significativa y no lo es |
+| El ABL segmentado se calibra a la unidad de referencia | Aísla la redistribución de un cambio de nivel, que se prueba aparte |
+| El tablero no recalcula; el simulador sí, con el modelo guardado | Las cifras de la pantalla coinciden con el informe por construcción, y un test ata el simulador al dataset |
+| El informe y los hallazgos del README los escribe un script | Cada cifra narrada sale del dato y no se desincroniza |
 
 ---
 
 ## Limitaciones
 
 - **Precios de publicación, no de cierre**, del lado de la venta y del alquiler.
-- **Una sola inmobiliaria**: la cartera de RE/MAX publica alrededor de 8% más barato que
-  el mercado y está sesgada en cobertura geográfica (`sesgo.py`). Las rentabilidades
+- **Una sola inmobiliaria**: la cartera de RE/MAX publica más barato que el mercado y
+  está sesgada en cobertura geográfica (informe, hallazgo 6). Las rentabilidades
   probablemente están del lado alto.
-- **El alquiler es estimado**: cada rentabilidad es una banda, que contiene al 82% de los
-  alquileres reales.
+- **El alquiler es estimado**: cada rentabilidad es una banda, cuya cobertura se midió
+  fuera de muestra sobre avisos de alquiler de RE/MAX, no sobre contratos.
 - **Casas y PH fuera de las recomendaciones**: hay muy pocos alquileres observados.
+- **La revisión a mano es de las listas, no del universo**: se leyeron las finales y los
+  primeros puestos, y el resto se revisó por palabras clave. La validación cruzada no
+  agrupa avisos duplicados, y los links a RE/MAX dejan de funcionar cuando la propiedad se
+  vende.
+- **La vara depende de la fecha**: la curva de ON es la de la consulta guardada; con
+  otra fecha, la vara cambia y hay que volver a correr el pipeline.
 - **Sin apreciación, costos de salida ni riesgo legal**: la TIR supone reventa al mismo
-  precio en dólares, y el riesgo legal no tiene una fuente que lo cuantifique.
+  precio en dólares.
 - **Liquidez de toda la Ciudad**: el tiempo de publicación de IDECBA es por cantidad de
   ambientes, no por barrio ni por propiedad.
-- **Accesibilidad en línea recta**: no ve barreras, frecuencias ni destinos, y no incluye
-  el Premetro.
+- **Accesibilidad en línea recta**, sin barreras, frecuencias ni Premetro.
 - **Un corte temporal único**: el relevamiento es de agosto de 2026.
-- **Asociación, no causalidad**: los tests muestran relaciones entre variables, no qué
-  las provoca.
-
-El tablero muestra las tres primeras en su encabezado y todas en la pestaña *Supuestos y
-alcance*.
-
----
-
-## Qué cambia respecto de la 2da entrega
-
-La devolución de la 2da entrega fijó siete prioridades, y la consigna de la 3ra suma la
-función de decisión y el tablero. Cada pedido, con lo que se hizo y dónde se ve:
-
-| # | Pedido | Origen | Qué se hizo | Dónde |
-|---|---|---|---|---|
-| 1 | Fusión espacial: distancia de cada aviso a subte, tren y Metrobús, y una medida que combine los tres modos, para que H2 deje de ser "no evaluable" | Devolución, prioridad 1 | Capas, medida, cobertura y magnitud y forma de H2. Con el subte solo, las comunas 8 y 11 no tenían acceso; con las tres redes, más del 70% | [Accesibilidad](#accesibilidad-al-transporte), [H2](#h2-precio-del-m²-y-distancia-a-la-red) |
-| 2 | Tests formales de H1 a H4, con p-valor, tamaño del efecto, intervalo y si cambian la decisión | Devolución, prioridad 2 | Los cuatro tests. H2 se reformula como un escalón a 1 km | [Hipótesis](#hipótesis-los-tests-formales) |
-| 3 | Función de decisión prescriptiva para P1, P2 y P3, **implementada y evaluada** | Devolución, prioridad 3; consigna de la 3ra entrega | Implementada en `decision.py` y evaluada en 22 escenarios | [Función de decisión](#función-de-decisión) |
-| 4 | ABL segmentado por barrio, superficie y tipo de propiedad, y su efecto sobre la rentabilidad neta | Devolución, prioridad 4 | ABL por propiedad con la Ley Tarifaria 2026. Redistribuye, pero no mueve la conclusión | [Costos](#costos-del-propietario-antes-y-después) |
-| 5 | Costos de entrada, refacción, liquidez y riesgo legal, con fuente y fecha | Devolución, prioridad 5 | Entrada y refacción con fuente, y la TIR a 5 años. El riesgo legal queda como limitación declarada; la liquidez sigue siendo la de IDECBA (ficha 5 del catálogo) | [Costos](#costos-del-propietario-antes-y-después) |
-| 6 | Depuración del repositorio: código sin uso, referencias a versiones anteriores, versiones fijas, tests independientes del directorio | Devolución, prioridad 6 | Hecho, archivo por archivo | [Procedencia](#procedencia-de-cada-archivo) |
-| 7 | Informe de hallazgos con lo nuevo, conservando solo lo que cambia la decisión | Devolución, prioridad 7 | `reporte.py` reescrito; lista también los hallazgos de la 2da que no siguen | [`informe/INFORME_HALLAZGOS.md`](informe/INFORME_HALLAZGOS.md) |
-| 8 | Revisión del modelo de alquiler con las variables espaciales y contra una referencia simple | Plan de la 2da entrega; devolución | El Ridge se queda; la banda del KPI 4 pasa de cubrir 50% a 82% | [Modelo de alquiler](#modelo-de-alquiler) |
-| 9 | Síntesis de atributos (PCA/MCA) y micro-mercados | Plan de la 2da entrega | Hecho, como análisis informativo: no entra al modelo | [Síntesis de atributos](#síntesis-de-atributos-y-micro-mercados) |
-| 10 | Tablero para el inversor | Consigna de la 3ra entrega | Streamlit, cinco pestañas, verificado contra las cifras del informe | [El tablero](#el-tablero) |
-
-**Alcance corregido respecto del plan de la 2da entrega.** El README de la 2da entrega
-cierra con un "Plan para lo pendiente" que ubica la función de decisión y el tablero en
-la entrega final. La consigna vigente los pide en esta pre-entrega, y esta entrega los
-incluye (filas 3 y 10). Esa tabla no se modifica porque la 2da entrega ya está
-corregida; el alcance que vale es el de esta sección.
-
----
-
-## Procedencia de cada archivo
-
-### Traído de la 2da entrega
-
-Todo sale de la carpeta `Entrega 2/` del commit `24e09b6`, que es la versión corregida
-de la 2da pre-entrega, y son solo archivos versionados. El código, los datos y la
-configuración se copiaron en una sola operación, al crear esta carpeta. El catálogo de
-fuentes se trajo después, cuando la fusión espacial lo hizo necesario (ver
-**Documentación**, abajo). La columna "Estado" indica qué cambió desde que se trajo.
-
-**Código (`src/`)**
-
-| Archivo | Estado |
-|---|---|
-| `src/limpieza.py` | Sin cambios |
-| `src/variables.py` | Sin cambios |
-| `src/kpis.py` | Lee `dataset_espacial.csv` (salida de `espacial.py`) en lugar de `dataset_variables.csv`. **El KPI 2 usa el ABL de cada propiedad** (`costos.py`) en lugar de un porcentaje plano; `--gastos` vuelve al plano. Suma costos de entrada, refacción y TIR a 5 años, el antes y el después, y una segunda grilla de sensibilidad (ABL × costos de entrada × vacancia). Calcula la banda cuantílica del KPI 4 y guarda el `.joblib` con metadata: versión de scikit-learn, fecha, hash de los datos de entrenamiento, predictoras y métricas. El modelo de alquiler no cambia. En el docstring, el apartado sobre las dummies de RegEx se atribuye a la 2da entrega |
-| `src/modelo_alquiler.py` | Se quitó el `main()`, un punto de entrada heredado de la 1ra entrega que no usaba nadie: aplicaba vacancia 8% y gastos 12% (no los de `supuestos.py`), escribía archivos que el pipeline no usa y pisaba `ranking_barrios.csv`. El docstring deja de citar un error de ~11,5%, que no es el vigente (11,2%). `calcular_rentabilidad` acepta gastos por propiedad. **El ranking de barrios se ordena por neta y no por bruta**, con desempate por nombre: con el ABL segmentado ya no es lo mismo, y el orden ya no cambia entre corridas. **La banda del KPI 4 es nueva**: regresión cuantílica calibrada por grupo de evidencia (`banda_cuantilica`) en lugar del error mediano del tramo. `entrenar_y_validar` devuelve sus métricas para la metadata del `.joblib`. El Ridge no cambia |
-| `src/supuestos.py` | Se quitaron constantes que ningún script ni notebook leía (`TOP_BARRIOS_HEATMAP` y tres `SCATTER_*`); la fecha de consulta y el umbral de completitud pasan a comentario. Nuevas secciones: radio de caminata y tramos de H2 (4b2), criterio para reemplazar el modelo (`MEJORA_MINIMA_R2`), nivel de significación de los tests (`ALFA`), ABL segmentado (3b2), costos de entrada (3e), refacción (3f) y riesgo legal como limitación (3g) y la función de decisión (4d: soporte del modelo, margen por liquidez y grillas de sensibilidad). **Se corrigieron dos errores heredados del ABL**: el ejemplo de ARS 43.994 es con coeficiente geográfico 1,75 y no 1,25, y la fuente no dice que una VFH de 15 a 25 millones sea "el rango de un 2 ambientes usado" |
-| `src/eda.py` | Se quitaron un import sin uso (`matplotlib.pyplot`), un color que no se usaba (`BUENO`) y tres funciones que solo usaban los notebooks de la 2da entrega y su informe (`leer_asimetria`, `cobertura_estratos`, `resumir_efecto`) |
-| `src/temporal.py` | Se quitó un import sin uso (`numpy`). `lado_remax()` acepta la ruta del dataset como parámetro. La neta tradicional y los fijos del temporal usan el ABL mediano de cada celda en lugar del plano, para que P3 use los mismos gastos que el KPI 2 |
-| `src/reporte.py` | **Reescrito con los hallazgos de esta entrega**, ordenados por cuánto cambian la decisión: la función de decisión, los costos de entrada, el modelo y su banda, los tests formales, los micro-mercados, el temporal, el sesgo de la cartera y H2. Solo quedan los hallazgos que cambian la decisión, y se listan los de la 2da que no siguen. Las cifras de los tests salen de `validacion.resumen_hipotesis`. Vuelve a ser parte del pipeline |
-| `src/sesgo.py` | Sin cambios |
-| `src/fuentes_externas.py` | Sin cambios |
-| `src/test_fuentes.py` | Resuelve las rutas desde la ubicación del archivo: antes solo corría desde la raíz de la entrega |
-| `src/test_supuestos.py` | Verifica el contrato nuevo del KPI 2 (gastos de cada propiedad = 10,24% + su ABL), la tabla de coeficientes geográficos (48 barrios, entre 0 y 2), la escala del Impuesto Inmobiliario y los rangos de los costos de entrada. Incluye un negativo: con el gasto plano, la neta del dataset no coincide |
-| `src/test_variables.py` | Sin cambios |
-| `src/test_eda.py` | Sin los tests de esas tres funciones. Los del efecto estratificado verifican `efecto_estratificado` con `mediana_ponderada`, que es lo que usan el informe y el notebook 02 |
-
-**Datos (`data/`)**
-
-| Archivo | Estado |
-|---|---|
-| `data/raw/dataset_maestro.csv` | Sin cambios. Es el crudo del scraping de la 1ra entrega (14.867 avisos, 16-08-2026) |
-| `data/external/` (7 tablas y `reporte_fuentes.txt`) | Sin cambios. Tablas agregadas y fechadas de IDECBA, Colegio de Escribanos, Inside Airbnb y Censo 2022 |
-| `data/reference/` (`ranking_barrios_entrega1.csv`, `LEEME.md`) | Sin cambios |
-| `data/processed/` — `auditoria_calidad.csv`, `reporte_limpieza.txt`, `reporte_regex.txt` | **Regenerados en esta carpeta** por `limpieza.py` y `variables.py`. Contenido idéntico al de la 2da entrega; los reportes cambian la fecha de corrida |
-| `data/processed/` — `dataset_analitico.csv`, `ranking_barrios.csv`, `modelo_alquiler.joblib`, `sensibilidad_supuestos.csv`, `reporte_kpis.txt` | **Regenerados con contenido nuevo** por `espacial.py` y `kpis.py`. `dataset_analitico.csv` suma 17 columnas (accesibilidad, costos y percentiles del alquiler) y pierde `error_estimacion`; `rent_neta_pct` usa el ABL segmentado y `rent_bruta_min` / `rent_bruta_max` salen de la banda cuantílica; el resto de las columnas heredadas no cambia. El ranking se ordena por neta. La sensibilidad suma la grilla B |
-| `data/processed/` — `temporal_vs_tradicional.csv`, `reporte_temporal.txt` | **Regenerados** por `temporal.py`, con el ABL segmentado |
-| `data/processed/` — `sesgo_precio_barrio.csv`, `sesgo_representacion_comuna.csv`, `reporte_sesgo.txt` | **Regenerados** por `sesgo.py` en la corrida completa. Contenido idéntico al de la 2da entrega: `sesgo.py` no usa la neta; el reporte cambia la fecha de corrida |
-| `data/processed/DICCIONARIO_DATOS.md` | El encabezado deja de presentar la matriz como "de la 2da pre-entrega". Se agregaron la sección 8.1 (ABL, costos y TIR), la 9 (accesibilidad), la 10 (función de decisión), los pasos nuevos del linaje, la fórmula nueva de `rent_neta_pct` y cuatro advertencias de uso |
-
-**Configuración**
-
-| Archivo | Estado |
-|---|---|
-| `requirements.txt` | Versiones exactas en lugar de mínimas. Se agregaron `openpyxl`, que `fuentes_externas.py` importa para leer los cuadros de IDECBA y del Colegio y no estaba declarado, y `streamlit`, para el tablero |
-| `.gitignore` | Se agregó `dataset_espacial.csv`, el intermedio nuevo del pipeline, y el comentario registra que `decision.py` también escribe en el dataset analítico |
-
-**Documentación**
-
-| Archivo | Estado |
-|---|---|
-| `informe/FUENTES_EXTERNAS.md` | Traído **en un segundo paso**, al incorporar las capas espaciales: no estaba en la copia inicial. Sale del mismo commit `24e09b6` y era idéntico al de la 2da entrega al traerlo. Se trajo en lugar de escribir un catálogo nuevo para que las fuentes 1 a 5, cuyas tablas sí están en `data/external/`, sigan documentadas en esta carpeta. Cambios: las fichas 6 a 9 (subte, tren, Metrobús, espacios verdes) reemplazan a la ficha "planificada" de transporte; se suma la sección sobre qué mide la distancia y qué no; el IPC pasa a ser la ficha 10, y las referencias al contexto apuntan al README de la 2da entrega |
-
-### No traído
-
-Los notebooks, los gráficos y el informe de hallazgos de la 2da entrega **no se
-copiaron**. Esta entrega tiene los suyos (ver [Cómo leer el trabajo](#cómo-leer-el-trabajo-los-notebooks)),
-y conserva solo los gráficos y hallazgos que cambian la decisión del inversor.
-
-### Construido en esta entrega
-
-| Archivo | Qué es |
-|---|---|
-| `src/espacial.py` | Fusión espacial y medida de accesibilidad. El cálculo de distancias (BallTree con métrica haversine, y la distancia a un polígono medida contra sus vértices) **se adaptó de `enriquecimiento.py`, de un repositorio previo del grupo** (`LladhonM/Analitica-Descriptiva`, commit `2f407b2`). Es nuevo: el Metrobús, la medida combinada, las capas versionadas, los reportes de cobertura y heterogeneidad, y que los parques excluyan los canteros centrales |
-| `src/test_espacial.py` | 52 tests de la fusión espacial, con negativos |
-| `src/accesibilidad.py` | H2: pendiente con y sin barrio fijo, perfil por tramos de distancia, radio de influencia y réplica del antecedente exploratorio |
-| `src/test_accesibilidad.py` | 8 tests de H2, sobre datos sintéticos con la respuesta conocida: el barrio fijo elimina la centralidad pura y el perfil recupera una penalidad plantada |
-| `src/costos.py` | Fórmulas del ABL segmentado (Ley 6927), costos de entrada, refacción y TIR a 5 años. Los números están en `supuestos.py` |
-| `src/test_costos.py` | 38 tests. El ABL se valida contra una referencia externa: los siete ejemplos que calcula Roomix con la Ley 6927 |
-| `data/processed/h2_perfil_distancia.csv`, `reporte_h2.txt` | Salida de `accesibilidad.py` |
-| `data/processed/antes_despues_kpis.csv` | Neta mediana, barrios sobre el piso y top 5, antes y después del ajuste |
-| `src/comparacion_modelos.py` | El modelo de alquiler contra una referencia simple, con variables espaciales y contra gradient boosting, fuera de muestra en tres semillas, y la cobertura de la banda anterior contra la nueva (`cobertura_banda.csv`) |
-| `src/test_modelo.py` | 25 tests: la calibración conformal sobre un caso sintético, la metadata del `.joblib` (con su hash contra los datos de entrada) y la coherencia de la banda |
-| `data/processed/comparacion_modelos.csv`, `cobertura_banda.csv`, `reporte_comparacion_modelos.txt` | Salida de `comparacion_modelos.py` |
-| `src/validacion.py` | Las piezas de los tests formales: Spearman por permutación, Holm, errores agrupados, Van Elteren y la pendiente con efectos fijos de celda con su bootstrap. `resumen_hipotesis` repite los cuatro tests con las semillas del notebook 04 para el informe |
-| `src/test_validacion.py` | 19 tests de esas piezas contra referencias independientes (scipy, la regresión con dummies, HC1), con negativos |
-| `src/sintesis.py` | PCA sobre las dummies, MCA con la corrección de Benzécri, micro-mercados por k-medias con su estabilidad, y la prima de cada grupo con precios observados |
-| `src/test_sintesis.py` | 18 tests: el MCA contra el chi-cuadrado de scipy y la fórmula de transición, los micro-mercados contra grupos plantados y la prima contra una prima plantada, con negativos |
-| `src/decision.py` | La función de decisión: P1, P2 y P3, su evaluación y su sensibilidad. Agrega 14 columnas al dataset analítico |
-| `src/test_decision.py` | 25 tests: la frontera y los pares de P2 contra la comparación de todos los pares, la neta central contra `kpis.py`, la ocupación de equilibrio contra `temporal.py`, con negativos |
-| `data/processed/decision_sensibilidad.csv`, `decision_p3.csv`, `reporte_decision.txt` | Salida de `decision.py` |
-| `notebooks/01` a `06` | Los notebooks de esta entrega (ver [Cómo leer el trabajo](#cómo-leer-el-trabajo-los-notebooks)) |
-| `graficos/01` a `15` | Los gráficos que guardan los notebooks |
-| `tablero/app.py` | La interfaz del tablero: encabezado, filtros y las cinco pestañas |
-| `tablero/datos.py` | La lógica del tablero: carga del dataset, filtros, medianas y etapas de la decisión. Importa `supuestos` y `eda` de `src/` |
-| `tablero/test_tablero.py` | 106 verificaciones de `datos.py`: las cifras de referencia sin filtros, cada filtro fila por fila, y negativos |
-| `tablero/.streamlit/config.toml` | El tema del tablero |
-| `simulador/simular.py` | El simulador por consola, y el que arma `parametros.json` (`--actualizar`) y la página (`--html`). **Viene del repositorio previo del grupo** (`LladhonM/Analitica-Descriptiva`), donde se actualizó al modelo de esta entrega; acá lee el modelo de `data/processed/` y no sale de la carpeta |
-| `simulador/simulador.html` | La página del simulador, autocontenida: se abre con doble clic. La genera `simular.py --html`; no se edita a mano |
-| `simulador/web/plantilla.html`, `simulador/web/motor.js` | Las fuentes de la página: la interfaz y el cálculo en JavaScript, que repite el de `simular()` |
-| `simulador/parametros.json` | Supuestos, tablas por barrio y celda y referencias del mercado que usa el simulador, armados con las funciones de `src/` |
-| `simulador/test_simulador.py` | 91 verificaciones: el simulador contra el dataset analítico en cada venta, la página contra Python en Chrome, y negativos |
-| `data/processed/DISENO_TABLERO.md` | Diseño del tablero: paleta, pestañas, visualizaciones, filtros y comportamiento |
-| `data/processed/GUIA_TABLERO.md` | Qué columnas usa el tablero y cuáles son internas, y las limitaciones que van en pantalla |
-| `informe/INFORME_HALLAZGOS.md` | El informe de esta entrega, que emite `reporte.py` |
-| `data/external/transporte_estaciones.csv` | Bocas de subte, estaciones de tren y paradas de Metrobús, con fuente y fecha de descarga |
-| `data/external/espacios_verdes.csv`, `espacios_verdes_vertices.csv` | Plazas y parques, y los vértices de sus polígonos |
-| `data/processed/reporte_espacial.txt` | Log de `espacial.py`: capas, cobertura del dato, distancias, acceso por comuna y heterogeneidad por barrio |
-| `README.md` | Este archivo |
-
-Las capas se bajaron de Buenos Aires Data el 27-10-2026 y son idénticas, byte a byte, a
-las que usaba `enriquecimiento.py`: se volvieron a descargar de la fuente oficial, con
-fecha, en lugar de copiarse.
+- **Asociación, no causalidad**: los tests y las primas muestran relaciones, no qué las
+  provoca.
 
 ---
 
 ## Reproducir
 
-Python 3.13. Desde esta carpeta:
+Python 3.13. Desde la raíz del repositorio:
 
 ```bash
 py -m pip install -r requirements.txt
 
 py src/limpieza.py --tc 1500             # crudo -> dataset limpio + auditoría
-py src/variables.py                      # RegEx sobre el texto -> dummies
-py src/espacial.py                       # distancias a subte, tren, Metrobús y plazas
+py src/variables.py                      # minería de texto con RegEx -> dummies
+py src/espacial.py                       # distancias a subte, tren, Metrobús, plazas y parques
+py src/curva_on.py                       # curva de ON con los precios guardados (--actualizar consulta la API)
 py src/kpis.py                           # modelo de alquiler -> KPIs, ABL, costos y TIR
 py src/temporal.py                       # P3: tradicional contra temporal
 py src/sesgo.py                          # la cartera contra IDECBA y el Censo
-py src/accesibilidad.py                  # H2: precio del m2 y distancia a la red
+py src/accesibilidad.py                  # H2: precio del m² y distancia a la red
 py src/comparacion_modelos.py            # el modelo contra la referencia (el paso más lento)
 py src/decision.py                       # P1 a P3 -> columnas de la decisión
-py src/reporte.py                        # informe/INFORME_HALLAZGOS.md
-py src/test_variables.py                 # motor RegEx, sin red
-py src/test_supuestos.py                 # supuestos.py contra el pipeline
-py src/test_fuentes.py                   # joins con fuentes externas, sin red
-py src/test_eda.py                       # estadística de eda.py, sin datos
-py src/test_espacial.py                  # fusión espacial, sin red
-py src/test_costos.py                    # ABL, costos de entrada y TIR
-py src/test_accesibilidad.py             # método de H2, sobre datos sintéticos
-py src/test_modelo.py                    # banda cuantílica y metadata del modelo
-py src/test_validacion.py                # piezas de los tests formales, sin datos
-py src/test_sintesis.py                  # PCA, MCA y micro-mercados, sin datos
-py src/test_decision.py                  # función de decisión
-py tablero/test_tablero.py               # carga, filtros y medianas del tablero
+py src/credito_y_verdes.py               # aptos para crédito y prima por espacios verdes
+py src/reporte.py                        # informe y hallazgos de este README
 py simulador/simular.py --actualizar     # parámetros del simulador
 py simulador/simular.py --html           # la página del simulador
-py simulador/test_simulador.py           # simulador contra el dataset; la página en Chrome
 ```
 
-Los diez primeros scripts reconstruyen `data/processed/` y el informe a partir de
-`data/raw/dataset_maestro.csv`, en ese orden: `temporal.py` usa el ABL que calcula
-`kpis.py`, `comparacion_modelos.py` lee la banda del modelo que guarda `kpis.py`,
-`decision.py` necesita la salida de `temporal.py`, y `reporte.py` lee todo lo anterior.
-La corrida de los diez scripts tarda unos 3 minutos y reproduce los valores
-versionados.
+Los tests, que no modifican nada:
 
-Después, los notebooks, que leen esas salidas:
+```bash
+py src/test_variables.py      py src/test_supuestos.py     py src/test_fuentes.py
+py src/test_eda.py            py src/test_espacial.py      py src/test_costos.py
+py src/test_curva_on.py       py src/test_accesibilidad.py py src/test_modelo.py
+py src/test_validacion.py     py src/test_sintesis.py      py src/test_decision.py
+py src/test_credito_y_verdes.py
+py tablero/test_tablero.py    py simulador/test_simulador.py
+```
+
+Después, los notebooks, que leen esas salidas (el 03 necesita `dataset_espacial.csv`,
+que es intermedio y no se versiona):
 
 ```bash
 cd notebooks
-py -m nbconvert --to notebook --execute --inplace 01_accesibilidad.ipynb
-py -m nbconvert --to notebook --execute --inplace 02_costos_del_propietario.ipynb
-py -m nbconvert --to notebook --execute --inplace 03_modelo_alquiler.ipynb
-py -m nbconvert --to notebook --execute --inplace 04_validacion.ipynb   # unos 2 minutos
-py -m nbconvert --to notebook --execute --inplace 05_sintesis_atributos.ipynb   # 1 minuto
-py -m nbconvert --to notebook --execute --inplace 06_decision.ipynb
+for n in 01_accesibilidad 02_costos_del_propietario 03_modelo_alquiler 04_validacion 05_sintesis_atributos 06_decision; do
+  py -m nbconvert --to notebook --execute --inplace $n.ipynb
+done
 ```
 
-Los notebooks necesitan `dataset_espacial.csv` (el 03 lee de ahí los alquileres para la
-banda), que es intermedio y no se versiona: hay que correr antes el pipeline. Los
-intermedios (`dataset_limpio.csv`, `dataset_excluidos.csv`, `dataset_variables.csv`,
-`dataset_espacial.csv`) no se versionan.
+`espacial.py` y `curva_on.py` usan las capas y los precios versionados en
+`data/external/`, así que corren sin red; `espacial.py --descargar` y
+`curva_on.py --actualizar` vuelven a consultar las fuentes. El tablero y la página del
+simulador no necesitan el pipeline. La parte del test del simulador que corre la página
+necesita Chrome; sin él, se saltea.
 
-`espacial.py` usa las capas versionadas de `data/external/`, así que corre sin red. Con
-`--descargar` vuelve a bajarlas de Buenos Aires Data a `data/external/raw/` (no
-versionado; el archivo de espacios verdes pesa 15 MB) y rehace las capas con la fecha
-del día.
-
-El tablero no necesita el pipeline: lee el dataset versionado (ver
-[Cómo abrirlo](#cómo-abrirlo)). El simulador tampoco: la página versionada ya trae el
-modelo y los parámetros. Solo hace falta regenerarla si cambia la salida del pipeline.
-La parte del test que corre la página necesita Chrome; sin él, se saltea.
-
-**Cifras de referencia.** Una corrida correcta da exactamente estas cifras, y el tablero
-las reproduce sin filtros (todo el rango de precios y todos los tipos). Si alguna cambia,
-cambió el pipeline o una dependencia:
-
-| Cifra | Valor | Respecto de la 2da entrega |
-|---|---|---|
-| Dataset limpio | 12.097 filas | igual |
-| Ventas con estimación confiable | 9.203 | igual |
-| Rentabilidad bruta mediana | 7,01% | igual |
-| Rentabilidad neta mediana | 5,65% | 5,67% con ABL plano |
-| TIR a 5 años mediana | 4,27% | nueva |
-| Repago mediano | 171 meses | igual |
-| R² del modelo de alquiler (log, fuera de muestra) | 0,848 | igual |
-| Error relativo mediano | 11,2% | igual |
-| Cobertura de la banda del KPI 4, fuera de muestra | 81,6% | 50,1% con la banda anterior |
-| Universo de la decisión | 4.484 propiedades | nueva |
-| Pasan P1 (neta pesimista sobre el techo) | 18; 4 con costos de entrada | nueva |
-| Frontera de P2 | 140 propiedades; 7,2% de pares distinguibles | nueva |
-| `dataset_analitico.csv` | 12.097 × 128 | 98 columnas en la 2da |
+Las fuentes externas, con su fecha y sus limitaciones, están en
+[`informe/FUENTES_EXTERNAS.md`](informe/FUENTES_EXTERNAS.md), y cada columna del dataset,
+en [`data/processed/DICCIONARIO_DATOS.md`](data/processed/DICCIONARIO_DATOS.md).
 
 ---
 
-## Estructura
+## Licencia
 
-```
-Entrega 3/
-├── data/
-│   ├── raw/            dataset_maestro.csv, crudo sin modificar
-│   ├── processed/      dataset_analitico.csv, reportes, DICCIONARIO_DATOS.md,
-│   │                   GUIA_TABLERO.md, DISENO_TABLERO.md
-│   ├── external/       tablas fechadas de las fuentes externas y capas espaciales
-│   └── reference/      ranking de barrios de la 1ra entrega, para comparar
-├── informe/            INFORME_HALLAZGOS.md, FUENTES_EXTERNAS.md
-├── notebooks/          01 accesibilidad, 02 costos, 03 modelo, 04 validación,
-│                       05 síntesis, 06 decisión (en orden de lectura)
-├── graficos/           los 15 gráficos que guardan los notebooks
-├── src/                pipeline, supuestos y tests
-├── tablero/            tablero en Streamlit: app.py, datos.py, test_tablero.py y el tema
-├── simulador/          simulador.html (doble clic), simular.py, parametros.json,
-│                       test_simulador.py y las fuentes de la página en web/
-├── requirements.txt
-└── README.md
-```
+Ver [`LICENSE`](LICENSE).

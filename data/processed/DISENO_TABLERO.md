@@ -28,10 +28,10 @@ daltonismo.
 | Tarjetas | `#FFFFFF` | Tarjetas de KPI y recuadros de cada gráfico, con borde de 1 px en `#E1E6EE` |
 | Fondo secundario | `#E8EEF7` | Controles, filas de la sensibilidad iguales a la base, número de cada limitación |
 | Texto secundario | `#5B6170` | Rótulos, notas y ejes (contraste 6:1 sobre blanco) |
-| Acento | `#FFD275` | La banda de retorno 7,10–7,60% (área sombreada) y su muestra en la barra lateral. Única excepción de texto: la distancia al piso en la tarjeta oscura de lectura, donde el contraste es alto |
+| Acento | `#FFD275` | La banda de retorno mínimo (área sombreada) y su muestra en la barra lateral. Única excepción de texto: la distancia al piso en la tarjeta oscura de lectura, donde el contraste es alto |
 | Contexto | `#778472` | Pendiente de Theil-Sen (H1); referencias de ocupación (P3) |
 | Dato principal | `#2F68B0` | Neta central, serie principal, histograma, gestión tercerizada (P3) |
-| Dato de alerta | `#C08A1E` | Candidatas P1 "a verificar"; propiedades sobre el techo |
+| Dato de alerta | `#C08A1E` | Candidatas P1 "a verificar"; propiedades sobre el techo de la banda |
 | Dato secundario | `#4A7F3A` | TIR por barrio; gestión autogestionada (P3) |
 | Selección | `#00A676` | Propiedad elegida en todas las vistas (P2, mapa, ficha). Solo para eso |
 
@@ -39,9 +39,9 @@ daltonismo.
 
 | Categoría | Color |
 |---|---|
-| Debajo del piso (< 7,10%) | `#2F68B0` |
-| Dentro de la banda (7,10–7,60%) | `#B9BCC4` |
-| Sobre el techo (> 7,60%) | `#C08A1E` |
+| Debajo del piso de la banda | `#2F68B0` |
+| Dentro de la banda | `#B9BCC4` |
+| Sobre el techo de la banda | `#C08A1E` |
 
 **Reglas de color**
 - Un color sigue a la entidad, no a su posición: si un filtro cambia las series, las que
@@ -107,8 +107,8 @@ responde una pregunta del inversor; el tablero no replica los notebooks.
 ### Barra lateral
 
 Marca del tablero, los filtros (sección 4), el botón **Restablecer filtros** y, al pie, la
-**clave de la banda de retorno mínimo** (7,10–7,60% anual en USD, ON de YPF 2031 y Pampa
-2037), que vale para todos los gráficos: es una referencia fija, no un filtro.
+**clave del retorno mínimo** (la TIR de las ON en dólares a 5 años, con su banda p25 a
+p75), que vale para todos los gráficos: es una referencia fija, no un filtro.
 
 ### Pestañas
 
@@ -126,7 +126,7 @@ Marca del tablero, los filtros (sección 4), el botón **Restablecer filtros** y
 
 **Reglas para todas las vistas**
 - Ninguna neta sin su banda (`neta_min_pct` a `neta_max_pct`).
-- Ningún gráfico de rentabilidad sin la franja 7,10–7,60% sombreada en `#FFD275`.
+- Ningún gráfico de rentabilidad sin la banda de retorno sombreada en `#FFD275`.
 - Medidas de resumen: **medianas**, no promedios.
 - La banda y el presupuesto salen de `supuestos.py` (`S.RETORNO_MINIMO_BANDA`,
   `S.PRESUPUESTO_USD`); los nombres de barrio, de `eda.nombre_barrio()`. Ningún número
@@ -151,10 +151,10 @@ Marca del tablero, los filtros (sección 4), el botón **Restablecer filtros** y
 - **Histograma de la neta** (o de la TIR, según la métrica elegida) con la banda sombreada
   y la mediana marcada. Es el gráfico central del tablero.
 - **Etapas del universo de decisión** (*"¿Cuántas pasan cada vara?"*): universo → neta
-  central sobre el techo → P1 (neta pesimista sobre el techo) → TIR pesimista sobre el
-  techo. Sin filtros: 4.484 → 227 → 18 → 4. **Barras horizontales** en escala lineal (no
+  central sobre la vara → P1 (neta pesimista sobre la vara) → TIR pesimista sobre la
+  vara. **Barras horizontales** en escala lineal (no
   embudo, no logarítmica), con la cifra **afuera** de la barra en formato *"cantidad · %
-  del universo"* (p. ej. *"18 · 0,4%"*), para que los valores chicos se lean. Las dos
+  del universo"* (p. ej. *"12 · 0,3%"*), para que los valores chicos se lean. Las dos
   primeras en el dato principal y las dos últimas en el de alerta. Debajo, en un recuadro
   de aviso: *"Las que pasan P1 no son una recomendación: hay que verificar por qué son
   baratas."*
@@ -213,10 +213,10 @@ Solo con `universo_decision = True`.
 ### Pestaña 5 · Supuestos y alcance
 
 - **Sensibilidad** desde `decision_sensibilidad.csv`: cuántas propiedades pasan P1 (y P1
-  con entrada) en cada uno de los 22 escenarios, **agrupados por supuesto**, con barras y
+  con entrada) en cada escenario, **agrupados por supuesto**, con barras y
   cifras; las filas iguales a la base van con fondo. Arriba, la cifra que resume la
   pestaña: sin contar los dos extremos combinados, P1 va de 6 a 33 propiedades según el
-  supuesto (base: 18).
+  supuesto, con la base marcada.
 - **Limitaciones completas**, numeradas: las tres del encabezado, más casas y PH fuera de
   las recomendaciones, sin apreciación, sin costos de salida, sin riesgo legal, liquidez de
   toda la Ciudad y no causalidad.
@@ -276,15 +276,11 @@ En los filtros de botones, ninguno elegido equivale a todos.
   (`tablero/test_tablero.py`); `datos.py` importa `supuestos` y `eda` de `src/`. Los KPIs
   no se recalculan: se usan las columnas ya materializadas. `st.html` limpia el HTML con
   DOMPurify y descarta los `<svg>`, así que los íconos van como imágenes `data:`.
-- **Ejecución local.** Desde `Entrega 3/tablero/`: `streamlit run app.py`. Streamlit lee el
-  tema de `.streamlit/config.toml` en la carpeta desde donde se ejecuta, por eso se corre
-  desde `tablero/`. Las dependencias están en `Entrega 3/requirements.txt` y las
-  instrucciones en el README.
-- **Publicación.** Streamlit Community Cloud toma las dependencias del `requirements.txt`
-  de la **raíz** del repositorio, con solo los paquetes del tablero: no lee
-  `Entrega 3/requirements.txt`, y el espacio de "Entrega 3" corta la ruta que le pasa al
-  instalador. Ese archivo pide `streamlit>=1.66.1` y no una versión fija: con una versión
-  más vieja que la de la nube, la página queda cargando sin fin.
+- **Ejecución local.** Desde la raíz del repositorio: `streamlit run tablero/app.py`.
+  Streamlit lee el tema de `.streamlit/config.toml` en la carpeta desde donde se
+  ejecuta, por eso se corre desde la raíz. Las dependencias están en `requirements.txt`.
+- **Publicación.** Streamlit Community Cloud, con main file path `tablero/app.py`:
+  instala el `requirements.txt` de la raíz y lee el tema de `.streamlit/` de la raíz.
 
 ---
 
@@ -295,7 +291,7 @@ Valen para todas las pestañas.
 - **Layout ancho** (`st.set_page_config(layout="wide")`).
 - **Las pestañas 1, 3 y 4 entran sin scroll en 1440×900**: lo principal arriba, el detalle
   debajo. Las otras dos tienen scroll a propósito: la 2, porque el mapa va primero y a
-  todo el ancho; la 5, por la lista de los 22 escenarios de la sensibilidad.
+  todo el ancho; la 5, por la lista de escenarios de la sensibilidad.
 - **Gráficos lado a lado** en columnas (`st.columns`) y dentro de tarjetas blancas con
   borde (`st.container(border=True)`), con márgenes de Plotly chicos.
 - **Explicaciones en ayudas** (el ícono de ayuda junto al título o ⓘ en las tarjetas), no
@@ -310,17 +306,17 @@ Valen para todas las pestañas.
 
 ---
 
-## Verificación antes de entregar
+## Verificación antes de publicar
 
 Hecha el 05-11-2026 sobre la versión de `main`.
 
 | Qué se verifica | Cómo | Resultado |
 |---|---|---|
-| Sin filtros, los números coinciden con `informe/INFORME_HALLAZGOS.md` (neta mediana 5,65%, 19,4% sobre el piso, etapas 4.484 → 227 → 18 → 4, TIR mediana 4,27%) | `tablero/test_tablero.py` | 106 tests, 0 fallos |
+| Sin filtros, los números coinciden con `informe/INFORME_HALLAZGOS.md` (neta y TIR medianas, % sobre el piso y etapas de la decisión, leídos del CSV) | `tablero/test_tablero.py` | 0 fallos |
 | Cada filtro cambia el contador N y las vistas que deben cambiar, y no cambia las que no | `test_tablero.py` (cada filtro contra su condición, fila por fila); las vistas precalculadas llevan la etiqueta *"No responde a los filtros"* | OK |
 | Los estados vacíos y de pocas observaciones no rompen los KPIs ni las etapas, y muestran su mensaje | `test_tablero.py` (filtros que dejan 0 filas) y mensajes en `app.py` | OK |
 | Ninguna neta aparece sin su banda ni ningún gráfico de rentabilidad sin la franja | Revisión de las cinco pestañas | OK |
 | Las pestañas 1, 3 y 4 entran sin scroll en 1440×900; la 2 y la 5 tienen scroll a propósito | Alto de cada pestaña medido en un navegador a 1440×900 | 900 px las tres; 1.225 px la 2 y 1.107 px la 5 |
 | La tabla P1 ordena por número y la selección de P1 o P2 abre la ficha y marca la propiedad en P2 y en el mapa | Prueba en el navegador | OK |
-| El tablero publicado carga | <https://dashboard-descriptiva-g2.streamlit.app/> | Carga con sus cinco pestañas, sin errores |
-| Capturas de las vistas principales para la entrega final | — | Pendiente |
+| El tablero carga sin excepciones | `streamlit.testing` (AppTest) sobre `tablero/app.py` | Sin excepciones |
+| Capturas de las vistas principales | — | Pendiente: se toman de la versión publicada |

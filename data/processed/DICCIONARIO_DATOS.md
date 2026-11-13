@@ -1,19 +1,17 @@
 # Diccionario de datos — `dataset_analitico.csv`
 
-Matriz final del pipeline: **12.097 filas × 128 columnas**, una fila por aviso
+Matriz final del pipeline: **12.097 filas × 132 columnas**, una fila por aviso
 residencial de RE/MAX en CABA (10.749 en venta y 1.348 en alquiler), con las variables
 curadas, las extraídas del texto, las de accesibilidad, los cuatro KPIs materializados,
-los costos del propietario y la función de decisión. Esta entrega suma las 8 columnas de
-la sección 9, las 7 de la sección 8.1, las 14 de la sección 10 y los percentiles 10 y 90
-del alquiler. Para armar el tablero, `GUIA_TABLERO.md` dice qué columnas usar y cuáles
-son internas del pipeline. Cambian tres de la 2da:
+los costos del propietario y la función de decisión (secciones 8.1, 9 y 10). Para armar
+el tablero, `GUIA_TABLERO.md` dice qué columnas usar y cuáles son internas del pipeline.
 `rent_neta_pct` usa el ABL de cada propiedad, y `rent_bruta_min` y `rent_bruta_max`
-salen de esos percentiles. Sale `error_estimacion`, la banda anterior.
+salen de los percentiles 10 y 90 del alquiler.
 
 | Atributo | Valor |
 |---|---|
 | Grano | Un aviso publicado (`id_aviso` es clave única) |
-| Fuente primaria | API JSON pública de RE/MAX Argentina (listado `findAll` y ficha `findBySlug`), scrapeada en la 1ra entrega |
+| Fuente primaria | API JSON pública de RE/MAX Argentina (listado `findAll` y ficha `findBySlug`), scrapeada en la versión inicial |
 | Fecha de captura | 16 de agosto de 2026, hora argentina (`fecha_scraping` está en UTC y cruza al 17) |
 | Origen en disco | `data/raw/dataset_maestro.csv` (14.867 avisos × 55 columnas) |
 | Generado por | `src/limpieza.py --tc 1500` → `src/variables.py` → `src/espacial.py` → `src/kpis.py` → `src/temporal.py` → `src/decision.py` |
@@ -112,7 +110,7 @@ para su operación**: el nulo de la otra es estructural.
 | `ambientes` | Cantidad de ambientes | Entero | Conteo | RE/MAX `totalRooms` | Valores > 15 → nulo (P4); 4 imputados con la mediana de `superficie_rango` y redondeados (P9) |
 | `dormitorios` | Cantidad de dormitorios (0 = monoambiente) | Entero | Conteo | Ficha RE/MAX `bedrooms` | Valores > 12 → nulo (P4); 1 imputado con la mediana de `superficie_rango` y redondeado (P9) |
 | `banos` | Cantidad de baños | Entero | Conteo | RE/MAX `bathrooms` | Ninguna |
-| `cocheras` | Cantidad de cocheras | Entero | Conteo | Ficha RE/MAX `parkingSpaces` | Si faltaba y el texto mencionaba una cochera, el scraper de la 1ra entrega cargó 1 |
+| `cocheras` | Cantidad de cocheras | Entero | Conteo | Ficha RE/MAX `parkingSpaces` | Si faltaba y el texto mencionaba una cochera, el scraper de la versión inicial cargó 1 |
 | `antiguedad_anios` | Antigüedad del edificio | Entero | Años | Ficha RE/MAX `yearBuilt` | Si viene como año: 2026 − año. Fuera de 0 a 150 → nulo (P4). 131 imputados con la mediana de barrio × `tipo_familia`, o la global (P9) |
 | `antiguedad_rango` | Tramo de antigüedad | Categórica ordinal: `a estrenar`, `1-5`, `6-15`, `16-30`, `31-50`, `50+` | Años | Derivada, `limpieza P7` | Recalculada después de imputar (P9) |
 | `es_a_estrenar` | El edificio es nuevo (antigüedad ≤ 0) | Binaria 0/1, con nulos | — | Derivada, scraper, de `yearBuilt` | Anulada junto con la antigüedad fuera de rango. **No se imputa** (131 nulos, las mismas filas con antigüedad imputada). Distinta de `estrenar`, que sale del texto |
@@ -140,7 +138,7 @@ para su operación**: el nulo de la otra es estructural.
 
 Todas salen del mismo texto: `titulo`, `descripcion` y `detalles` concatenados y
 normalizados (minúsculas, sin tildes, signos reemplazados por espacio). Reemplazan las
-dummies por subcadena de la 1ra entrega; la comparación está en `reporte_regex.txt`.
+dummies por subcadena de la versión inicial; la comparación está en `reporte_regex.txt`.
 
 > **Un 0 significa "no se menciona", no "no tiene".** Un aviso que no nombra el
 > ascensor puede tenerlo igual.
@@ -195,16 +193,17 @@ anula esa mención. Prevalencia calculada sobre las 12.097 filas.
 | `toilette` | Espacio | toilette, toilet, baño de servicio | no | 30,8% |
 | `vestidor` | Espacio | vestidor, walk-in closet | no | 14,2% |
 | `lavadero` | Espacio | lavadero | sí | 46,0% |
-| `a_reciclar` | Estado | a reciclar, a refaccionar, a poner en valor, a demoler | no | 4,3% |
+| `a_reciclar` | Estado | a reciclar, a refaccionar, "a refac.", a poner en valor, a demoler | no | 4,3% |
 | `reciclado` | Estado | reciclado, refaccionado, remodelado, a nuevo | no | 13,2% |
 | `estrenar` | Estado | a estrenar, obra nueva | no | 11,0% |
-| `en_pozo` | Estado | en pozo, en construcción, en obra, preventa | no | 4,0% |
+| `en_pozo` | Estado | pozo (salvo "pozo de aire"), en construcción, en obra, preventa, fecha de entrega o entrega en 2027 o después | no | 6,7% |
 | `luminoso` | Estado | luminoso, vista abierta, vista panorámica | no | 50,5% |
 | `apto_credito` | Comercialización | apto crédito, apto hipotecario | sí | 21,5% |
 | `apto_profesional` | Comercialización | apto profesional, uso profesional, apto oficina | sí | 11,9% |
 | `renta_actual` | Comercialización | alquilado, con inquilino, con renta, contrato vigente | no | 2,4% |
 | `oportunidad` | Comercialización | oportunidad, excelente inversión, imperdible | no | 34,2% |
-| `financiacion` | Comercialización | financiación, en cuotas, plan de pago | no | 8,4% |
+| `financiacion` | Comercialización | financiación, financiado, en cuotas, "N cuotas", anticipo, "ctas", hipoteca privada, plan de pago (no la publicidad de un crédito bancario) | no | 10,1% |
+| `uso_no_residencial` | Comercialización | uso mixto, sector profesional, "departamento u oficina", "ideal oficinas", "funciona como oficina" | no | 1,1% |
 | `dueno_directo` | Comercialización | dueño directo, sin comisión, trato directo | no | 0,0% |
 
 `dueno_directo` vale 0 en todas las filas porque RE/MAX es una red de agentes y no
@@ -239,11 +238,11 @@ gastos del propietario que son de cada propiedad: 10,24% iguales para todas
 | `n_alq_barrio` | Alquileres de entrenamiento en el barrio de la propiedad | Entero | Conteo | Derivada, `kpis.py` | 0 si el barrio no tiene alquileres |
 | `estimacion_confiable` | 1 si el barrio tiene al menos 10 alquileres | Binaria 0/1 | — | Derivada, `kpis.py` | `n_alq_barrio ≥ 10` (`MIN_ALQ_BARRIO`). 9.203 de 10.749 ventas en 1. Por debajo, el modelo extrapola desde otros barrios. **Los resúmenes de KPIs filtran por esta columna** |
 | `rent_bruta_pct` | **KPI 1**: rentabilidad bruta anual | Decimal | % anual | Derivada, `kpis.py` | `alquiler_est_usd_mes × 12 / venta_usd × 100`, a 2 decimales |
-| `rent_neta_pct` | **KPI 2**: rentabilidad neta anual | Decimal | % anual | Derivada, `kpis.py` | `rent_bruta_pct × (1 − 0,0588) × (1 − gastos_pct / 100)`, a 2 decimales. Las expensas ordinarias no se descuentan: las paga el inquilino. Hasta la 2da entrega los gastos eran 14,04% para todas |
+| `rent_neta_pct` | **KPI 2**: rentabilidad neta anual | Decimal | % anual | Derivada, `kpis.py` | `rent_bruta_pct × (1 − 0,0588) × (1 − gastos_pct / 100)`, a 2 decimales. Las expensas ordinarias no se descuentan: las paga el inquilino. Hasta la versión anterior los gastos eran 14,04% para todas |
 | `meses_repago` | **KPI 3**: meses de alquiler para recuperar el precio | Entero | Meses | Derivada, `kpis.py` | `venta_usd / alquiler_est_usd_mes`, redondeado. Recupero simple: sin descuento, sin valor residual, sin inflación |
 | `alquiler_p10_usd_mes` | Percentil 10 del alquiler de la propiedad | Decimal | USD/mes | Derivada, `kpis.py` (`modelo_alquiler.banda_cuantilica`) | Regresión cuantílica lineal con las predictoras del Ridge, calibrada por grupo de evidencia del barrio (CQR). Cubre el 81,6% de los alquileres observados fuera de muestra, objetivo 80% |
 | `alquiler_p90_usd_mes` | Percentil 90 del alquiler de la propiedad | Decimal | USD/mes | Ídem | Ídem |
-| `rent_bruta_min` | **KPI 4**: extremo inferior de la banda de incertidumbre | Decimal | % anual | Derivada, `kpis.py` | `alquiler_p10_usd_mes × 12 / venta_usd × 100`. Hasta la 2da entrega era la bruta menos el error mediano del tramo, una banda que cubría el 50% |
+| `rent_bruta_min` | **KPI 4**: extremo inferior de la banda de incertidumbre | Decimal | % anual | Derivada, `kpis.py` | `alquiler_p10_usd_mes × 12 / venta_usd × 100`. Hasta la versión anterior era la bruta menos el error mediano del tramo, una banda que cubría el 50% |
 | `rent_bruta_max` | **KPI 4**: extremo superior de la banda | Decimal | % anual | Derivada, `kpis.py` | `alquiler_p90_usd_mes × 12 / venta_usd × 100` |
 
 ### 8.1 Costos del propietario y TIR (`kpis.py` y `costos.py`)
@@ -258,7 +257,7 @@ están en `supuestos.py`, secciones 3b2 a 3g.
 | `gastos_pct` | Gastos del propietario que entran en el KPI 2 | Decimal | % del alquiler | Derivada, `kpis.py` | `10,24 + abl_pct` |
 | `costos_entrada_pct` | Costos de entrada del comprador, escenario base | Decimal | % del precio | Derivada, `costos.py` | Comisión 3% + escribano 1% + registrales 0,2% + mitad de sellos (1,35% hasta ARS 226,1 millones de precio, 1,75% arriba). Piso de cada rango publicado |
 | `refaccion_usd` | Costo de refacción mínima | Decimal | USD | Derivada, `costos.py` | Solo si `a_reciclar == 1`; si no, 0. Un baño por cada baño (USD 5.573), una cocina (USD 6.220) y pintura (ARS 33.500/m² × superficie) |
-| `alquiler_post_refaccion_usd_mes` | Alquiler que el modelo estima para la unidad ya refaccionada | Decimal | USD/mes | Derivada, `kpis.py` | Solo si `a_reciclar == 1`. Mismo modelo, con `a_reciclar = 0` y `reciclado = 1` |
+| `alquiler_post_refaccion_usd_mes` | Alquiler que el modelo estima para la unidad ya refaccionada | Decimal | USD/mes | Derivada, `kpis.py` | Solo si `a_reciclar == 1`. El alquiler estimado por el factor de `supuestos.SUBA_REFACCION` (el efecto de `reciclado` en el modelo). Antes era el modelo con `a_reciclar = 0` y `reciclado = 1` |
 | `tir_5a_pct` | Tasa interna de retorno a 5 años: la cifra comparable con la banda de retorno mínimo | Decimal | % anual | Derivada, `costos.py` | Pagar precio + costos de entrada + refacción; cobrar la neta cada año (con el alquiler post-refacción en las unidades a reciclar); revender al mismo precio en dólares al quinto año. Sin apreciación ni costos de salida |
 
 ## 9. Accesibilidad (`espacial.py`)
@@ -292,12 +291,15 @@ umbrales están en `supuestos.py`, secciones 4 y 4d.
 | `en_presupuesto` | La propiedad cuesta entre USD 80.000 y 200.000 | Booleana | — | Derivada, `decision.py` | `venta_usd` dentro de `PRESUPUESTO_USD` |
 | `n_alq_celda_tipo` | Alquileres observados en la celda tipo × tramo de superficie de la propiedad | Entero | Conteo | Derivada, `decision.py` | Cuenta los alquileres del dataset con el mismo `tipo_familia` y `superficie_rango` |
 | `en_soporte_modelo` | El modelo de alquiler tiene datos suficientes para ese tipo y tamaño | Booleana | — | Derivada, `decision.py` | `n_alq_celda_tipo ≥ 30` (`MIN_ALQ_SOPORTE`). Deja afuera a todas las casas y los PH: hay 14 y 44 alquileres observados de cada uno |
-| `universo_decision` | La propiedad entra a las recomendaciones | Booleana | — | Derivada, `decision.py` | `en_presupuesto` y `en_soporte_modelo`. 4.484 propiedades |
+| `precio_es_total` | El precio publicado es el total | Booleana | — | Derivada, `decision.py` | `financiacion == 0` y `en_pozo == 0`: con financiación del vendedor el precio suele ser solo el contado, y en pozo la unidad no se alquila hasta la entrega |
+| `excluida_revision` | La revisión a mano la sacó de las recomendaciones | Booleana | — | `data/reference/revision_listas.csv` | Oficinas y usos mixtos, con su motivo |
+| `alerta_revision` | Lo que hay que verificar antes de decidir | Texto | — | `revision_listas.csv` y `decision.py` | El motivo de la revisión a mano; si no hay, "menciona oficina o uso mixto" (`uso_no_residencial`) o "solo X% de la superficie es cubierta" (menos de `MIN_CUBIERTA_SOBRE_TOTAL`). Vacío si no hay nada que verificar |
+| `universo_decision` | La propiedad entra a las recomendaciones | Booleana | — | Derivada, `decision.py` | `en_presupuesto`, `en_soporte_modelo`, `precio_es_total` y no `excluida_revision`. La cantidad está en `reporte_decision.txt` |
 | `neta_min_pct` | Rentabilidad neta del escenario pesimista | Decimal | % anual | Derivada, `decision.py` | La fórmula de `rent_neta_pct` con `alquiler_p10_usd_mes`: misma vacancia, 10,24% de gastos y el ABL de la propiedad en pesos, que sobre un alquiler más bajo pesa más |
 | `neta_max_pct` | Rentabilidad neta del escenario optimista | Decimal | % anual | Ídem | Ídem, con `alquiler_p90_usd_mes` |
-| `tir_5a_min_pct` | TIR a 5 años del escenario pesimista, con costos de entrada | Decimal | % anual | Derivada, `decision.py` | Como `tir_5a_pct`, con el alquiler del percentil 10 (en las unidades a reciclar, escalado por la suba post-refacción) |
-| `p1_comprar` | **P1**: se recomienda comprar | Booleana | — | Derivada, `decision.py` | `universo_decision` y `neta_min_pct > 7,60` (techo de la banda de retorno + margen por liquidez de 0) |
-| `p1_comprar_con_entrada` | **P1, versión estricta**: también con costos de entrada | Booleana | — | Ídem | `universo_decision` y `tir_5a_min_pct > 7,60` |
+| `tir_5a_min_pct` | TIR a 5 años del escenario pesimista, con costos de entrada | Decimal | % anual | Derivada, `decision.py` | Como `tir_5a_pct`, con el alquiler del percentil 10 (en las unidades a reciclar, por el factor de `SUBA_REFACCION`, pagando la refacción mínima) |
+| `p1_comprar` | **P1**: se recomienda comprar | Booleana | — | Derivada, `decision.py` | `universo_decision` y `neta_min_pct >` la vara (`RETORNO_MIN_PCT`, la TIR de las ON a 5 años de `curva_on.py`) + margen por liquidez, 0 en el caso base |
+| `p1_comprar_con_entrada` | **P1, versión estricta**: también con costos de entrada | Booleana | — | Ídem | `universo_decision` y `tir_5a_min_pct >` la vara |
 | `p2_no_dominada` | **P2**: ninguna otra propiedad del universo la supera con claridad | Booleana | — | Derivada, `decision.py` | `neta_max_pct ≥` la mayor `neta_min_pct` del universo. Dentro de este grupo ninguna se distingue de otra por rentabilidad |
 | `m2_relativo_celda` | Precio del m² contra el mediano de su barrio y tramo de superficie | Decimal | Veces (1 = el mediano) | Derivada, `decision.py` | `venta_m2_usd /` mediana de las ventas de su celda. Por debajo de 0,7, verificar por qué es barata |
 | `dias_publicacion_ambientes` | Días que pasa publicado un aviso de esa cantidad de ambientes | Decimal | Días | IDECBA, `estadistica_ciudad_tiempo_publicacion.csv` | Último trimestre; 5 o más ambientes agrupados. Es de toda la Ciudad: no distingue barrio ni propiedad |

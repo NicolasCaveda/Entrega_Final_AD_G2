@@ -93,6 +93,8 @@ def credito(df: pd.DataFrame, rep: Reporte) -> list[dict]:
     # Precio del m2: aptas contra no aptas, dentro de la celda barrio x tramo.
     ok = v[v["venta_m2_usd"].notna()]
     t = eda.efecto_estratificado(ok, "apto_credito", "venta_m2_usd", ESTRATO, S.MIN_GRUPO_ESTRATO)
+    if t.empty:   # ninguna celda con suficientes aptas y no aptas: no hay comparacion
+        t = pd.DataFrame({"diferencia": [], "mediana_0": [], "peso": []})
     rel = eda.mediana_ponderada(t["diferencia"] / t["mediana_0"], t["peso"]) * 100
     ve = V.van_elteren(ok["venta_m2_usd"], ok["apto_credito"], ok["barrio"] + "|" + ok["superficie_rango"].astype(str),
                        S.MIN_GRUPO_ESTRATO)

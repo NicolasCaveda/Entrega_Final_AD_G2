@@ -98,9 +98,9 @@ check("banda de retorno: piso <= techo", S.RETORNO_MIN_PISO_PCT <= S.RETORNO_MIN
 check("banda de retorno en % y no en fraccion", 1 < S.RETORNO_MIN_PISO_PCT < 30)
 check("horizonte cubre al menos un contrato",
       S.HORIZONTE_ANIOS * 12 >= S.DURACION_CONTRATO_MESES)
-check("la grilla de sensibilidad contiene los valores de la 1ra entrega",
-      S.VACANCIA_PCT_ENTREGA_1 in S.SENSIBILIDAD_VACANCIA
-      and S.GASTOS_PCT_ENTREGA_1 in S.SENSIBILIDAD_GASTOS)
+check("la grilla de sensibilidad contiene los valores de la version inicial",
+      S.VACANCIA_PCT_INICIAL in S.SENSIBILIDAD_VACANCIA
+      and S.GASTOS_PCT_INICIAL in S.SENSIBILIDAD_GASTOS)
 
 
 # --- ABL segmentado y costos de entrada ---------------------------------------

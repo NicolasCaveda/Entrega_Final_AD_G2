@@ -29,7 +29,7 @@ reproducible en pocos meses; el agregado fechado congela la evidencia.
 NINGUN JOIN ESPACIAL
 --------------------
 Las tres fuentes se unen con RE/MAX por NOMBRE de barrio o a nivel ciudad.
-La fusion por coordenadas es materia de la 3ra entrega.
+La fusion por coordenadas la hace espacial.py.
 
 Uso:
     py src/fuentes_externas.py              # usa los crudos si ya estan bajados
@@ -149,7 +149,7 @@ BARRIOS_CABA = [
 ]
 # Grafias oficiales alternativas que usan las fuentes externas. Son pocas
 # porque las tres usan nombres oficiales; los alias de portal ("palermo soho")
-# no aparecen aca y por eso no se copio el normalizador de la 1ra entrega.
+# no aparecen aca y por eso no se copio el normalizador de la version inicial.
 ALIAS = {
     "boca": "la boca",
     "paternal": "la paternal",

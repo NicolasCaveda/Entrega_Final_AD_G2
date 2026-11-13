@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 """
 simular.py — Simula una propiedad y la evalua como lo hace el analisis vigente
-(3ra pre-entrega): alquiler estimado con su banda, ABL de la propiedad, neta,
+: alquiler estimado con su banda, ABL de la propiedad, neta,
 costos de entrada, TIR a 5 anios y la funcion de decision (P1, P2 y P3).
 
 DE DONDE SALEN LOS NUMEROS
 --------------------------
-De dos archivos de esta entrega:
+De dos archivos del proyecto:
     ../data/processed/modelo_alquiler.joblib   el Ridge, el smearing y la banda
                                                cuantilica calibrada (lo guarda kpis.py)
     parametros.json    supuestos (vacancia, gastos, ABL, costos, banda de
@@ -17,7 +17,7 @@ De dos archivos de esta entrega:
 Si se corre de nuevo el pipeline (por ejemplo, si se reentrena el modelo):
     py simulador/simular.py --actualizar
     py simulador/simular.py --html
---actualizar solo LEE el resto de la entrega; escribe unicamente parametros.json.
+--actualizar solo LEE el resto del proyecto; escribe unicamente parametros.json.
 
 MODO INTERACTIVO (te va preguntando):
     py simulador/simular.py
@@ -55,8 +55,8 @@ import pandas as pd
 
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
-ENTREGA_3 = os.path.dirname(AQUI)
-RUTA_MODELO = os.path.join(ENTREGA_3, "data", "processed", "modelo_alquiler.joblib")
+RAIZ = os.path.dirname(AQUI)
+RUTA_MODELO = os.path.join(RAIZ, "data", "processed", "modelo_alquiler.joblib")
 RUTA_PARAMETROS = os.path.join(AQUI, "parametros.json")
 
 # Caracteristicas que se pueden activar. Cada una es una dummy del modelo.
@@ -100,7 +100,7 @@ def fuera_de_rango(prop: dict) -> list[str]:
 
 
 # ==========================================================================
-# ACTUALIZAR parametros.json DESDE ESTA ENTREGA (solo lectura)
+# ACTUALIZAR parametros.json DESDE EL PROYECTO (solo lectura)
 # ==========================================================================
 
 def _commit(ruta: str) -> str | None:
@@ -112,7 +112,7 @@ def _commit(ruta: str) -> str | None:
         return None
 
 
-def actualizar(entrega: str = ENTREGA_3) -> int:
+def actualizar(entrega: str = RAIZ) -> int:
     """
     Arma parametros.json. Usa las funciones de src/ (supuestos, costos,
     decision) para que cada tabla salga igual que en el pipeline. No escribe
@@ -129,7 +129,7 @@ def actualizar(entrega: str = ENTREGA_3) -> int:
             print("Corré antes el pipeline (ver Reproducir en el README).")
             return 1
 
-    # Los modulos de src/ resuelven sus rutas desde la carpeta de la entrega.
+    # Los modulos de src/ resuelven sus rutas desde la raiz del proyecto.
     sys.path.insert(0, src)
     cwd = os.getcwd()
     os.chdir(entrega)
@@ -282,7 +282,7 @@ def cargar() -> tuple[dict, dict]:
 
 
 # ==========================================================================
-# CALCULO — las mismas formulas que la Entrega 3 (kpis.py, costos.py,
+# CALCULO — las mismas formulas que el pipeline (kpis.py, costos.py,
 # decision.py), vectorizadas: reciben un DataFrame con una fila por propiedad
 # ==========================================================================
 
@@ -835,7 +835,7 @@ def generar_html(m: dict, P: dict, salida: str) -> int:
 
 def main() -> int:
     p = argparse.ArgumentParser(
-        description="Simulador de alquiler, rentabilidad y decision (modelo de la 3ra pre-entrega)",
+        description="Simulador de alquiler, rentabilidad y decision",
         formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
     p.add_argument("--actualizar", action="store_true",
                    help="vuelve a armar parametros.json con la salida del pipeline")
@@ -869,7 +869,7 @@ def main() -> int:
         return generar_html(m, P, args.html)
     if not args.json:
         o = P["origen"]
-        print(f"Modelo de la Entrega 3 — entrenado el {o['modelo_entrenado'][:10]} con "
+        print(f"Modelo de alquiler — entrenado el {o['modelo_entrenado'][:10]} con "
               f"{num(o['n_alquileres_entrenamiento'])} alquileres; parámetros del {o['generado'][:10]}")
 
     if args.barrio and args.m2:

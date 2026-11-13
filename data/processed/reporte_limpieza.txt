@@ -2,7 +2,7 @@
 ==========================================================================
 LIMPIEZA DEL DATASET INMOBILIARIO
 ==========================================================================
-Fecha        : 2026-11-13 10:58
+Fecha        : 2026-11-13 11:50
 Entrada      : data/raw/dataset_maestro.csv
 Tipo cambio  : 1,500 ARS/USD
 Outliers     : moderado

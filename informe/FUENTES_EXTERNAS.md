@@ -1,15 +1,15 @@
 # Catálogo de fuentes externas
 
-**TP Integrador · 82.04 Analítica Descriptiva (ITBA) · Grupo 2 · 3ra pre-entrega**
+**TP Integrador · 82.04 Analítica Descriptiva (ITBA) · Grupo 2**
 
-El análisis de las entregas anteriores dependía de una sola fuente: la cartera de avisos de
+La versión inicial del análisis dependía de una sola fuente: la cartera de avisos de
 RE/MAX. Este catálogo documenta las fuentes que se sumaron para leerla contra el mercado
 y las que quedan planificadas. Cada una se describe con los mismos campos: qué variable
 aporta, cobertura geográfica, período, granularidad, cómo se une con RE/MAX, qué pregunta,
 KPI o hipótesis ayuda a analizar, y sus limitaciones.
 
-Las fichas 1 a 5 vienen de la 2da entrega. Esta entrega agrega las capas espaciales
-(fichas 6 a 9), que en la 2da figuraban como planificadas.
+Las fichas 1 a 5 son las fuentes del análisis exploratorio. Después se agregaron las capas espaciales
+(fichas 6 a 9) y la curva de obligaciones negociables (ficha 11), que es la vara de P1.
 
 Las fuentes 1 a 5 se leen con `py src/fuentes_externas.py`, y las capas espaciales, con
 `py src/espacial.py`. Los dos scripts dejan tablas fechadas en `data/external/`. Los
@@ -28,7 +28,8 @@ nombre de barrio, por comuna o a nivel ciudad; las 6 a 9, por coordenadas.
 | 6 | BA Data: bocas de subte | Integrada | coordenadas (más cercana) | H2, accesibilidad |
 | 7 | BA Data: estaciones de ferrocarril | Integrada | coordenadas (más cercana) | H2, accesibilidad |
 | 8 | BA Data: estaciones de Metrobús | Integrada | coordenadas (más cercana) | H2, accesibilidad |
-| 9 | BA Data: espacios verdes públicos | Integrada | coordenadas (borde más cercano) | Revisión del modelo de alquiler |
+| 9 | BA Data: espacios verdes públicos | Integrada | coordenadas (borde más cercano) | Revisión del modelo de alquiler; prima por cercanía al verde |
+| 11 | data912 y Criteria: curva de ON en dólares | Integrada | no se une: es la vara | P1: retorno mínimo al plazo del inversor |
 | 10 | IPC del INDEC | Planificada | nivel país, por mes | Lectura en términos reales |
 
 ---
@@ -58,7 +59,7 @@ nombre de barrio, por comuna o a nivel ciudad; las 6 a 9, por coordenadas.
 | **Período** | Mensual, de enero de 2002 a diciembre de 2025 (cuadro de IDECBA) más julio y agosto de 2026 (informes mensuales del Colegio) |
 | **Granularidad** | Ciudad × mes |
 | **Cómo se une con RE/MAX** | No se une fila a fila. Es un **ancla agregada**: el monto promedio escriturado se compara con el precio promedio de la cartera, y el volumen mensual describe la liquidez del mercado en el que se va a revender |
-| **Qué ayuda a analizar** | La diferencia entre **precio publicado y precio de cierre** (contexto argentino, punto 4 del README de la 2da entrega), el **predominio del contado** (en 2025, 19,1% de las compraventas tuvo hipoteca) y la **liquidez** del mercado de salida (restricción de P1) |
+| **Qué ayuda a analizar** | La diferencia entre **precio publicado y precio de cierre** (contexto argentino del planteo), el **predominio del contado** (en 2025, 19,1% de las compraventas tuvo hipoteca) y la **liquidez** del mercado de salida (restricción de P1) |
 | **Limitaciones** | Incluye todas las compraventas de la Ciudad (cualquier tipo de inmueble), no solo departamentos residenciales, así que el monto promedio no es comparable uno a uno con la cartera. Sin apertura por barrio. **El cuadro de IDECBA trae 2026 con valores inconsistentes**: julio de 2026 figura con 1.159 compraventas y el Colegio informa 6.051 (acumulado enero-julio: 6.771 contra 35.528). Hasta 2025 coinciden (agosto de 2025: 6.372 contra 6.370). Por eso se usa el cuadro solo hasta 2025, y 2026 sale de los informes del Colegio, cargados con su URL. Solo hay monto en dólares para los meses de 2026 |
 | **Archivo** | `data/external/colegio_escribanos_mensual.csv` |
 | **Fuente** | [IDECBA, actos notariales de compraventa e hipotecas](https://www.estadisticaciudad.gob.ar/eyc/banco-datos/actos-notariales-de-compraventa-de-inmuebles-e-hipotecas-anotados-en-el-colegio-de-escribanos-ciudad-de-buenos-aires-enero-de-2002-junio-de-2025/); Colegio de Escribanos, informes de [julio](https://www.colegio-escribanos.org.ar/2026/08/24/cantidad-de-escrituras-de-compraventa-realizadas-en-julio-2026/) y [agosto de 2026](https://www.colegio-escribanos.org.ar/2026/09/22/cantidad-de-escrituras-de-compraventa-realizadas-en-agosto-2026/) |
@@ -164,6 +165,21 @@ nombre de barrio, por comuna o a nivel ciudad; las 6 a 9, por coordenadas.
 
 ---
 
+### 11. Curva de obligaciones negociables en dólares (data912 y Criteria)
+
+| Campo | Detalle |
+|---|---|
+| **Variable que aporta** | Precio de mercado de 31 ON corporativas bullet en dólares, a tasa fija, y con él su TIR, su plazo y su duration |
+| **Cobertura** | Emisores de primera línea con ON en BYMA: YPF, Pampa Energía, Pan American, Pluspetrol, TGS y Telecom. Vencimientos de 2027 a 2047 |
+| **Período** | Una consulta, guardada con su fecha (`data/external/on_precios.csv`) |
+| **Granularidad** | Una fila por especie |
+| **Cómo se une con RE/MAX** | No se une: la TIR al plazo del inversor es la vara contra la que se compara la rentabilidad de cada propiedad |
+| **Qué ayuda a analizar** | P1: si comprar le gana a la renta fija en dólares al mismo plazo, y cómo cambia la vara con el horizonte |
+| **Limitaciones** | La API publica precios, no TIR: cupón, frecuencia y vencimiento se transcribieron del reporte de Criteria (`on_terminos.csv`), con su TIR de referencia de julio de 2026 para controlar la transcripción. La API no dice si el precio incluye el cupón corrido; se tomó como limpio (ver `curva_on.py`) y la otra convención se informa. Algunas especies operan poco: se usa el punto medio entre compra y venta. Es el riesgo de empresas argentinas, no el soberano ni el de un depósito |
+| **Fuente** | Precios: API pública de data912.com, endpoint `/live/arg_corp` (precios de BYMA en dólares MEP). Términos: Criteria, *Reporte de Obligaciones Negociables 2T2026* (tablas 6a y 6b y fichas por emisor), precios al 02-07-2026 |
+
+---
+
 ## Accesibilidad: qué mide la distancia y qué no
 
 **La medida.** `dist_transporte_m` es la distancia, en metros, a la estación más cercana
@@ -246,6 +262,6 @@ mercado de CABA.
 | **Período** | Mensual |
 | **Granularidad** | Región × mes × división |
 | **Cómo se une con RE/MAX** | Por mes, a nivel agregado |
-| **Qué ayuda a analizar** | La lectura en términos reales de un alquiler en pesos contra un precio en dólares (contexto argentino, punto 1 del README de la 2da entrega) |
+| **Qué ayuda a analizar** | La lectura en términos reales de un alquiler en pesos contra un precio en dólares (contexto argentino del planteo) |
 | **Limitaciones** | Mide precios al consumidor, no el precio de los inmuebles. No tiene apertura por barrio |
 | **Fuente** | INDEC, informe técnico del IPC ([agosto de 2026](https://www.indec.gob.ar/uploads/informesdeprensa/ipc_09_26A1BE2DC4CD.pdf)) |

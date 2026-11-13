@@ -5,7 +5,7 @@ contra dos alternativas, todo fuera de muestra con el mismo esquema.
 
 POR QUE
 -------
-La consigna pide que un modelo predictivo se compare con una referencia
+Un modelo predictivo tiene que compararse con una referencia
 razonable y se evalue fuera de muestra. Cuatro modelos:
 
   mediana barrio x tramo   la referencia: alquiler/m2 mediano de la celda del
@@ -27,7 +27,7 @@ R2 en al menos supuestos.MEJORA_MINIMA_R2 en todas las semillas: los
 coeficientes del Ridge se leen como variaciones porcentuales y alimentan el
 informe, y eso no se cambia por una mejora que la particion puede borrar.
 
-Tambien compara la banda del KPI 4 de la 2da entrega (error mediano del
+Tambien compara la banda del KPI 4 de la version anterior (error mediano del
 tramo) con la de esta (regresion cuantilica calibrada, kpis.py): cuantos
 alquileres observados caen adentro de cada una.
 
@@ -142,7 +142,7 @@ def metricas(alq: pd.DataFrame, y: np.ndarray, pred_log: np.ndarray) -> dict:
 
 def cobertura_banda_anterior(alq: pd.DataFrame, y: np.ndarray, kf: KFold) -> float:
     """
-    La banda de la 2da entrega: estimacion +- error relativo mediano de su
+    La banda de la version anterior: estimacion +- error relativo mediano de su
     tramo. Por construccion (es una mediana), deja afuera a la mitad.
     """
     pred = cross_val_predict(M.construir_pipeline(), alq[M.NUMERICAS + M.CATEGORICAS + M.DUMMIES], y, cv=kf)
@@ -230,8 +230,8 @@ def main() -> int:
     anterior = cobertura_banda_anterior(alq, y, kf)
     banda = joblib.load(MODELO)["banda"]
     rep(f"Alquileres observados dentro de la banda, fuera de muestra:")
-    rep(f"    2da entrega, estimacion +- error mediano del tramo : {anterior:.1%}")
-    rep(f"    3ra entrega, percentiles 10 y 90 calibrados       : {banda['cobertura_calibrada']:.1%}"
+    rep(f"    version anterior, estimacion +- error mediano del tramo : {anterior:.1%}")
+    rep(f"    vigente, percentiles 10 y 90 calibrados           : {banda['cobertura_calibrada']:.1%}"
         f"  (objetivo {M.COBERTURA_OBJETIVO:.0%})")
     rep("La banda anterior era un rango del 50% por construccion: decia 'el alquiler esta entre")
     rep("estos dos valores' y acertaba la mitad de las veces. La nueva es mas ancha porque cubre")
@@ -239,7 +239,7 @@ def main() -> int:
 
     t.round(4).to_csv(SALIDA, index=False, encoding="utf-8-sig")
     pd.DataFrame([
-        {"banda": "anterior", "definicion": "estimacion +- error mediano del tramo (2da entrega)",
+        {"banda": "anterior", "definicion": "estimacion +- error mediano del tramo (version anterior)",
          "cobertura": round(anterior, 4)},
         {"banda": "vigente", "definicion": "percentiles 10 y 90, regresion cuantilica calibrada",
          "cobertura": round(banda["cobertura_calibrada"], 4)},

@@ -2,7 +2,7 @@
 ============================================================================
 MATERIALIZACION DE KPIs
 ============================================================================
-Fecha   : 2026-11-13 11:00
+Fecha   : 2026-11-13 11:51
 Entrada : data/processed/dataset_espacial.csv
 Supuestos: vacancia 5.88%, gastos 10.24% + ABL de cada propiedad
 
@@ -17,7 +17,7 @@ Gastos del propietario (% del alquiler cobrado):
     subtotal sin ABL     : 10.24%
     ABL                  : el de cada propiedad, Ley 6927 arts. 41-45 (costos.py);
                            3.80% en la unidad de referencia, como el ABL plano
-    TOTAL con ABL plano  : 14.04%  (2da entrega; solo en la sensibilidad)
+    TOTAL con ABL plano  : 14.04%  (version anterior; solo en la sensibilidad)
 
 Costos de entrada (% del precio, base = piso del rango):
     comision comprador   : 3.0 a 4.0%  (CUCICBA)
@@ -354,7 +354,7 @@ SENSIBILIDAD A SUPUESTOS Y DEFINICIONES
 ============================================================================
 Base: 9,203 ventas con estimacion confiable; 29 barrios del ranking (30+ ventas). Piso: 6.13%. El ranking base es el materializado (neta con ABL segmentado).
 
-A. Gastos planos (2da entrega): neta mediana (%)
+A. Gastos planos (version anterior): neta mediana (%)
 vacancia \ gastos         8%       10%       12%       14%       16%
                4%       6.19      6.06      5.92      5.79      5.65
                6%       6.06      5.93      5.80      5.67      5.54

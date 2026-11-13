@@ -212,7 +212,7 @@ check("sin superficie queda NaN",
 
 
 # ==========================================================================
-# 9. VARIABLES NUEVAS QUE NO EXISTIAN EN LA 1RA ENTREGA
+# 9. VARIABLES NUEVAS QUE NO EXISTIAN EN LA VERSION INICIAL
 # ==========================================================================
 
 check("apto mascotas", dummy("apto mascotas pequenas", "apto_mascotas"), 1)

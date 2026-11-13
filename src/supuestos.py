@@ -4,7 +4,7 @@ supuestos.py — Todos los supuestos y umbrales del analisis, en un solo lugar.
 
 POR QUE EXISTE
 --------------
-En la 1ra entrega la vacancia y los gastos eran dos numeros sueltos (8% y 12%)
+En la version inicial la vacancia y los gastos eran dos numeros sueltos (8% y 12%)
 sin fuente, y el presupuesto del inversor, los minimos de cobertura y los
 cortes de los graficos estaban repartidos entre notebooks. Este modulo los
 junta, y cada constante lleva al lado de donde sale y cuando se consulto.
@@ -57,10 +57,10 @@ TC_ARS_USD = 1500                # BCRA A 3500, promedio ago-2026 (1.499,92)
 # 1. PRESUPUESTO DEL INVERSOR
 # ==========================================================================
 
-# Perfil definido en la 1ra entrega (Entrega 1/README.md, "El interlocutor"): una
+# Perfil definido en la version inicial (el interlocutor del proyecto): una
 # persona con ahorros en dolares, tipicamente entre USD 80.000 y 200.000.
 # Es un parametro del problema, no un hallazgo: por eso no tiene fuente externa.
-PRESUPUESTO_MIN_USD = 80_000     # Entrega 1/README.md (ago-2026)
+PRESUPUESTO_MIN_USD = 80_000     # perfil del interlocutor (ago-2026)
 PRESUPUESTO_MAX_USD = 200_000    # idem
 PRESUPUESTO_USD = (PRESUPUESTO_MIN_USD, PRESUPUESTO_MAX_USD)
 
@@ -128,7 +128,7 @@ ABL_ARS_MES = (ABL_ARS_MES_MIN + ABL_ARS_MES_MAX) / 2
 ALQUILER_REF_USD_MES = 573       # dataset_analitico.csv, 2 amb 40-60 m2
 
 # ABL plano: el mismo porcentaje para todas las propiedades. Era el supuesto
-# de la 2da entrega. Desde la 3ra se usa solo como NIVEL de referencia del ABL
+# de la version anterior. Desde la 3ra se usa solo como NIVEL de referencia del ABL
 # segmentado (abajo) y como escenario de comparacion en la sensibilidad.
 ABL_PCT = round(ABL_ARS_MES / (ALQUILER_REF_USD_MES * TC_ARS_USD) * 100, 2)
 
@@ -310,13 +310,13 @@ SENSIBILIDAD_REFACCION = ["base", "alto"]
 # una fuente que publique su frecuencia o su costo para CABA, y estimarlo
 # seria peor que no tenerlo. No entra en ningun KPI.
 
-# Valores de la 1ra entrega, conservados para poder reproducir sus KPIs y
+# Valores de la version inicial, conservados para poder reproducir sus KPIs y
 # reportar el antes y el despues.
-VACANCIA_PCT_ENTREGA_1 = 8.0     # 1ra entrega, sin fuente
-GASTOS_PCT_ENTREGA_1 = 12.0      # idem
+VACANCIA_PCT_INICIAL = 8.0     # version inicial, sin fuente
+GASTOS_PCT_INICIAL = 12.0      # idem
 
 # Grilla del analisis de sensibilidad de kpis.py. La de gastos es la de la
-# 2da entrega (gastos planos); la segunda grilla cruza la vacancia con la
+# version anterior (gastos planos); la segunda grilla cruza la vacancia con la
 # definicion del ABL y con los costos de entrada.
 SENSIBILIDAD_VACANCIA = [4.0, 6.0, 8.0, 10.0, 12.0]
 SENSIBILIDAD_GASTOS = [8.0, 10.0, 12.0, 14.0, 16.0]
@@ -567,7 +567,7 @@ def tabla() -> str:
         f"    subtotal sin ABL     : {GASTOS_SIN_ABL_PCT:>5.2f}%",
         f"    ABL                  : el de cada propiedad, Ley 6927 arts. 41-45 (costos.py);",
         f"                           {ABL_PCT:.2f}% en la unidad de referencia, como el ABL plano",
-        f"    TOTAL con ABL plano  : {GASTOS_PCT:>5.2f}%  (2da entrega; solo en la sensibilidad)",
+        f"    TOTAL con ABL plano  : {GASTOS_PCT:>5.2f}%  (version anterior; solo en la sensibilidad)",
         "",
         "Costos de entrada (% del precio, base = piso del rango):",
         f"    comision comprador   : {COMISION_COMPRADOR_PCT[0]} a {COMISION_COMPRADOR_PCT[1]}%  (CUCICBA)",

@@ -1,6 +1,6 @@
 // motor.js — El calculo de simular.py, en JavaScript, para la pagina web.
 //
-// Mismas formulas y mismos redondeos que simular() (y que la Entrega 3:
+// Mismas formulas y mismos redondeos que simular() (y que el pipeline:
 // kpis.py, costos.py y decision.py). El modelo llega como coeficientes
 // (simular.py, modelo_lineal): el Ridge y las regresiones cuantilicas son
 // lineales en log(alquiler).

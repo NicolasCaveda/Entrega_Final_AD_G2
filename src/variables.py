@@ -4,7 +4,7 @@ variables.py — Ingenieria de variables y mineria de texto con RegEx.
 
 EL PROBLEMA QUE RESUELVE
 ------------------------
-El scraping de la 1ra entrega dejo 21 variables dicotomicas construidas con
+El scraping de la version inicial dejo 21 variables dicotomicas construidas con
 busqueda de subcadena: `if "pileta" in texto`. Es la forma mas rapida de
 extraer atributos de un texto libre, y tambien la mas ingenua. Sobre este
 dataset produce tres errores sistematicos, todos medidos en el reporte que
@@ -277,7 +277,7 @@ def extraer_estructura(texto: str) -> dict:
 # METODO VIEJO, PARA PODER COMPARAR
 # ==========================================================================
 
-# Copia literal de las keywords de la 1ra entrega (src/utils.py). No se usa
+# Copia literal de las keywords de la version inicial (src/utils.py). No se usa
 # para producir el dataset: se usa para medir cuanto mejora el RegEx. Sin
 # este contrafactual, "usamos RegEx" seria una afirmacion sin evidencia.
 KEYWORDS_VIEJAS = {
@@ -302,7 +302,7 @@ KEYWORDS_VIEJAS = {
 
 
 def dummies_viejas(texto: str) -> dict:
-    """Reproduce el `in` de subcadena de la 1ra entrega."""
+    """Reproduce el `in` de subcadena de la version inicial."""
     t = f" {texto} "
     return {k: int(any(kw in t for kw in kws)) for k, kws in KEYWORDS_VIEJAS.items()}
 
@@ -380,7 +380,7 @@ def aplicar(df: pd.DataFrame, rep: Reporte) -> pd.DataFrame:
     # --- Indice de confort: suma simple, no PCA -----------------------------
     # Se cuenta cuantos amenities declara el aviso. Es una suma, no un indice
     # ponderado: ponderar exige reduccion de dimensionalidad y eso pertenece a
-    # la 3ra entrega. Aca sirve como variable ordinal para el EDA.
+    # espacial.py. Aca sirve como variable ordinal para el EDA.
     COLS_CONFORT = ["pileta", "parrilla", "gimnasio", "sum", "solarium", "laundry",
                     "sauna", "coworking", "seguridad", "ascensor", "baulera",
                     "aire_acondicionado", "losa_radiante", "balcon", "terraza"]
@@ -413,7 +413,7 @@ def aplicar(df: pd.DataFrame, rep: Reporte) -> pd.DataFrame:
 def comparar(nuevas: pd.DataFrame, viejas: pd.DataFrame, texto: pd.Series,
              rep: Reporte) -> None:
     """Mide, atributo por atributo, cuanto cambia el resultado."""
-    rep.titulo("AUDITORIA: SUBCADENA (1ra entrega) CONTRA REGEX")
+    rep.titulo("AUDITORIA: SUBCADENA (version inicial) CONTRA REGEX")
     rep(f"{'atributo':<20}{'viejo %':>10}{'nuevo %':>10}{'delta pp':>10}"
         f"{'0->1':>8}{'1->0':>8}")
     rep("-" * 66)

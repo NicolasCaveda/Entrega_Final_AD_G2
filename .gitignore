@@ -14,9 +14,8 @@ venv/
 #   py src/decision.py             -> le suma las columnas de la decision
 #
 # Los intermedios pesan ~90 MB entre los cuatro y no se pueden mergear.
-# El dataset_analitico.csv, en cambio, es el entregable: es la matriz final
-# con los KPIs materializados, y la consigna pide que /data/processed exista
-# en el repositorio.
+# El dataset_analitico.csv, en cambio, se versiona: es la matriz final con
+# los KPIs materializados, y la leen el tablero y el simulador.
 # ---------------------------------------------------------------------------
 data/processed/dataset_limpio.csv
 data/processed/dataset_variables.csv

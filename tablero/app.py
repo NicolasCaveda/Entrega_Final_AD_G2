@@ -5,7 +5,7 @@ app.py — Tablero: ¿conviene comprar para alquilar, y si compro, que?
 Solo arma la interfaz; la carga, los filtros y las medianas estan en datos.py.
 Diseño en data/processed/DISENO_TABLERO.md; datos en GUIA_TABLERO.md.
 
-Uso, desde Entrega 3/tablero/:
+Uso, desde tablero/:
     streamlit run app.py
 """
 

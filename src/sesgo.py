@@ -13,7 +13,7 @@ sesgo en las dos dimensiones que se pueden contrastar con fuentes oficiales:
      el stock de departamentos del Censo 2022. La comuna es el nivel mas fino
      con un universo completo y publicado.
 
-Es comparacion descriptiva: no hay test de hipotesis (3ra entrega).
+Es comparacion descriptiva: no hay test de hipotesis.
 
 Uso:
     py src/sesgo.py            (despues de kpis.py y fuentes_externas.py)

@@ -96,7 +96,7 @@ check("amoblamiento definido para cada grupo de dormitorios",
 # 2. JOINS SOBRE LOS DATOS REALES
 # ==========================================================================
 
-# Raiz de la entrega: la carpeta que contiene src/.
+# Raiz del proyecto: la carpeta que contiene src/.
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 

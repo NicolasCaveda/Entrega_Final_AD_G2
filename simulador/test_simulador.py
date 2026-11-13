@@ -43,7 +43,7 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, AQUI)
 import simular as SIM  # noqa: E402
 
-ANALITICO = os.path.join(SIM.ENTREGA_3, "data", "processed", "dataset_analitico.csv")
+ANALITICO = os.path.join(SIM.RAIZ, "data", "processed", "dataset_analitico.csv")
 
 fallos = []
 corridos = 0

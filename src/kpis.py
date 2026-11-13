@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 """
-kpis.py — Materializa los cuatro KPIs de la 1ra entrega como columnas.
+kpis.py — Materializa los cuatro KPIs de la version inicial como columnas.
 
 QUE SIGNIFICA "MATERIALIZAR"
 ----------------------------
-En la 1ra entrega los KPIs eran definiciones en el informe. Aca dejan de ser
+En la version inicial los KPIs eran definiciones en el informe. Aca dejan de ser
 formulas escritas y pasan a ser columnas del dataset, una por propiedad:
 
   KPI 1  rent_bruta_pct    (alquiler estimado x 12) / precio de venta x 100
@@ -18,17 +18,17 @@ EL RODEO NECESARIO
 Ninguno de los cuatro se puede calcular directamente: hay 8 propiedades en
 venta por cada una en alquiler, y una propiedad publicada en venta no tiene
 precio de alquiler observado. El alquiler se estima con el modelo Ridge sobre
-log(alquiler) de la 1ra entrega, que se importa entero desde `modelo_alquiler`
+log(alquiler) de la version inicial, que se importa entero desde `modelo_alquiler`
 en vez de reimplementarse.
 
-QUE LE APORTO LA 2DA ENTREGA AL MODELO
+QUE LE APORTO LA VERSION ANTERIOR AL MODELO
 --------------------------------------
 Las 14 dummies que el modelo usa como predictoras ahora vienen del motor RegEx
 de `variables.py` y no de la busqueda por subcadena. Este script mide si esa
 correccion mejora la estimacion, entrenando las dos versiones sobre los mismos
 folds. Si limpiar las variables no cambiara nada, convendria saberlo.
 
-QUE CAMBIA EN LA 3RA ENTREGA
+QUE AGREGA SOBRE LA VERSION ANTERIOR
 ----------------------------
 - El ABL deja de ser un porcentaje plano: se calcula por propiedad con la
   Ley Tarifaria (costos.py). Los gastos del KPI 2 pasan a ser de cada una.
@@ -38,7 +38,7 @@ QUE CAMBIA EN LA 3RA ENTREGA
 
 Uso:
     py src/kpis.py                          # ABL segmentado (supuestos.py)
-    py src/kpis.py --vacancia 8 --gastos 12 # gastos planos, como la 1ra entrega
+    py src/kpis.py --vacancia 8 --gastos 12 # gastos planos, como la version inicial
 
 Salidas (en data/processed/):
     dataset_analitico.csv   LA matriz final: 12.097 filas con KPIs y variables
@@ -292,7 +292,7 @@ def neta_escenario(vta: pd.DataFrame, vacancia: float, abl: str, abl_tope: pd.Se
                    post: bool = False) -> pd.Series:
     """
     Rentabilidad neta de cada venta bajo una definicion del ABL:
-      plano            el ABL_PCT de la 2da entrega para todas
+      plano            el ABL_PCT de la version anterior para todas
       segmentado       el de cada propiedad, con la proporcion calibrada
       segmentado_tope  el de cada propiedad, con la VFH en el tope legal
     Con post=True, las unidades a reciclar cobran el alquiler post-refaccion.
@@ -353,7 +353,7 @@ def costos_y_tir(vta: pd.DataFrame, vacancia: float, rep: M.Reporte) -> pd.DataF
     # d% mas barata por m2 que sus comparables, el descuento expresado sobre
     # SU precio es d / (1 - d). La refaccion la convierte en oportunidad solo
     # si cuesta menos que eso. El descuento se calcula como en el notebook 03
-    # de la 2da entrega: dentro de cada celda barrio x tramo de superficie.
+    # de la version anterior: dentro de cada celda barrio x tramo de superficie.
     t3 = eda.efecto_estratificado(vta[vta["venta_m2_usd"].notna()], "a_reciclar", "venta_m2_usd",
                                   ["barrio", "superficie_rango"], S.MIN_GRUPO_ESTRATO)
     d = -eda.mediana_ponderada(t3["diferencia"] / t3["mediana_0"], t3["peso"])
@@ -422,7 +422,7 @@ def sensibilidad(vta: pd.DataFrame, abl_tope: pd.Series, rank: pd.DataFrame,
     Cuanto dependen los resultados de los supuestos y de las definiciones.
 
     Dos grillas:
-      A. vacancia x gastos planos: la de la 2da entrega, con el ABL dentro de
+      A. vacancia x gastos planos: la de la version anterior, con el ABL dentro de
          un porcentaje unico. Mueve el nivel, no el orden.
       B. vacancia x definicion del ABL x costos de entrada: con el ABL
          segmentado, el orden de los barrios ya puede cambiar; con costos de
@@ -452,7 +452,7 @@ def sensibilidad(vta: pd.DataFrame, abl_tope: pd.Series, rank: pd.DataFrame,
                 "top5_igual": top == top_base}
 
     filas = []
-    # A. La grilla de la 2da entrega: gastos planos.
+    # A. La grilla de la version anterior: gastos planos.
     for vac in S.SENSIBILIDAD_VACANCIA:
         for gas in S.SENSIBILIDAD_GASTOS:
             neta = (ok["rent_bruta_pct"] * (1 - vac / 100) * (1 - gas / 100)).round(2)
@@ -472,7 +472,7 @@ def sensibilidad(vta: pd.DataFrame, abl_tope: pd.Series, rank: pd.DataFrame,
         f"(neta con ABL segmentado).")
     rep("")
     a = t[t["grilla"] == "A"]
-    rep("A. Gastos planos (2da entrega): neta mediana (%)")
+    rep("A. Gastos planos (version anterior): neta mediana (%)")
     m = a.pivot(index="vacancia_pct", columns="gastos_pct", values="mediana")
     rep("vacancia \\ gastos".ljust(18) + "".join(f"{g:>9.0f}%" for g in m.columns))
     for v, f in m.iterrows():
@@ -512,7 +512,7 @@ def main() -> int:
     p.add_argument("--outdir", default="data/processed")
     p.add_argument("--vacancia", type=float, default=S.VACANCIA_PCT)
     # Sin --gastos, el ABL se calcula por propiedad (costos.py). Con --gastos,
-    # un porcentaje plano para todas, como en la 1ra y la 2da entrega.
+    # un porcentaje plano para todas, como en las versiones anteriores.
     p.add_argument("--gastos", type=float, default=None)
     args = p.parse_args()
 

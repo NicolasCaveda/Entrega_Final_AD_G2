@@ -21,7 +21,7 @@ donde se corre la app:
 
 ```python
 # tablero/datos.py (resumen)
-RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # Entrega 3/
+RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # raiz del proyecto
 sys.path.insert(0, os.path.join(RAIZ, "src"))
 import eda
 import supuestos as S
@@ -52,12 +52,12 @@ def cargar():
   estimación confiable), así que pandas las lee como texto. El `fillna(False)` las
   vuelve booleanas.
 - **No copiar números a mano en la app.** La banda de retorno sale de
-  `S.RETORNO_MINIMO_BANDA` (7,10% a 7,60%) y el presupuesto de `S.PRESUPUESTO_USD`. El
+  `S.RETORNO_MIN_PCT` (la vara) y `S.RETORNO_MINIMO_BANDA` y el presupuesto de `S.PRESUPUESTO_USD`. El
   nombre de cada barrio para mostrar, con tildes, sale de `eda.nombre_barrio(barrio)`:
   en el dataset están en minúscula y sin tildes, porque así se unen con las otras fuentes.
 - Una fila por aviso. Para todo lo de rentabilidad: **`operacion = "venta"` y
   `estimacion_confiable = 1`**, que son 9.203 filas.
-- Para las recomendaciones: **`universo_decision = True`**, que son 4.484 propiedades
+- Para las recomendaciones: **`universo_decision = True`**
   dentro del presupuesto y del soporte del modelo.
 - Las medidas de resumen son **medianas**, no promedios: los precios y las
   rentabilidades tienen cola larga y el promedio queda por encima de casi todos.
@@ -73,12 +73,13 @@ def cargar():
 | Alquiler estimado | `alquiler_est_usd_mes`, `alquiler_p10_usd_mes`, `alquiler_p90_usd_mes` |
 | KPIs | `rent_bruta_pct`, `rent_neta_pct`, `meses_repago`, `rent_bruta_min`, `rent_bruta_max`, `tir_5a_pct` |
 | Costos | `costos_entrada_pct`, `abl_pct`, `a_reciclar`, `refaccion_usd` |
-| Decisión | `universo_decision`, `en_soporte_modelo`, `neta_min_pct`, `neta_max_pct`, `tir_5a_min_pct`, `p1_comprar`, `p1_comprar_con_entrada`, `p2_no_dominada`, `m2_relativo_celda` |
+| Decisión | `universo_decision`, `en_soporte_modelo`, `neta_min_pct`, `neta_max_pct`, `tir_5a_min_pct`, `p1_comprar`, `p1_comprar_con_entrada`, `p2_no_dominada`, `m2_relativo_celda`, `alerta_revision` |
 | Temporal (P3) | `p3_ocupacion_equilibrio_pct`, `p3_ocupacion_airbnb_pct` |
 | Contexto | `dist_transporte_m`, `modo_cercano`, `amenities`, `cochera_txt`, `dias_publicacion_ambientes` |
 
-La vara de comparación es la **banda de retorno mínimo: 7,10% a 7,60%** anual en
-dólares (ON de YPF 2031 y Pampa 2037). Conviene fijarla como línea de referencia en todos
+La vara de comparación es la **TIR de las ON corporativas en dólares al plazo del
+inversor** (`S.RETORNO_MIN_PCT`, de `curva_on.py`), con su banda p25 a p75
+(`S.RETORNO_MINIMO_BANDA`); los valores dependen de la fecha de los precios guardados. Conviene fijarla como línea de referencia en todos
 los gráficos de rentabilidad, no como un filtro.
 
 Tablas chicas que sirven tal cual (se leen igual, con `utf-8-sig`):
@@ -112,7 +113,7 @@ Tablas chicas que sirven tal cual (se leen igual, con `utf-8-sig`):
 ## Lo que el tablero tiene que mostrar en pantalla
 
 Estas tres limitaciones van **visibles en la página principal**, no en una nota al pie.
-La consigna evalúa que el tablero "comunique el alcance y las limitaciones de los datos".
+El tablero tiene que comunicar el alcance y las limitaciones de los datos.
 
 1. **Son precios de publicación, no de cierre.** Tanto la venta como el alquiler son
    precios pedidos. El precio de cierre suele ser menor.
@@ -121,7 +122,8 @@ La consigna evalúa que el tablero "comunique el alcance y las limitaciones de l
    usados (`informe/INFORME_HALLAZGOS.md`, hallazgo 6). Las rentabilidades
    probablemente están del lado alto.
 3. **Cada rentabilidad es una banda, no un número.** El alquiler es una estimación. Su
-   banda del percentil 10 al 90 contiene al 82% de los alquileres reales: mostrar
+   banda del percentil 10 al 90 tiene la cobertura fuera de muestra de `cobertura_banda.csv`,
+   medida sobre avisos de alquiler de RE/MAX (no sobre contratos): mostrar
    siempre `neta_min_pct` a `neta_max_pct` junto a la neta, nunca la neta sola.
 
 Y dos que conviene tener a un clic:
@@ -135,10 +137,10 @@ Y dos que conviene tener a un clic:
 - **No ordenar `p2_no_dominada` por rentabilidad.** Esas propiedades no se distinguen
   entre sí. Si hace falta un orden, usar el ancho de la banda, de más angosta a más
   ancha.
-- **`p1_comprar` significa "verificar", no "comprar".** Las que pasan cuestan alrededor
-  de 30% menos por m² que su celda (`m2_relativo_celda`), y hay que ver por qué antes
-  de cualquier decisión.
-- **Una barra de neta sin la línea de 7,10% a 7,60% no dice nada.** El hallazgo central es
+- **`p1_comprar` significa "verificar", no "comprar".** Las que pasan cuestan menos
+  por m² que su celda (`m2_relativo_celda`), y hay que ver por qué antes de cualquier
+  decisión: el motivo de lo que encontró la revisión a mano está en `alerta_revision`.
+- **Una barra de neta sin la banda de retorno no dice nada.** El hallazgo central es
   que la propiedad típica queda debajo de esa línea.
 - **Los barrios con pocas ventas engañan.** Para comparar barrios, usar
   `ranking_barrios.csv`, que solo incluye barrios con 30 ventas o más.

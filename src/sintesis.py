@@ -14,7 +14,7 @@ clustering sobre esos ejes, grupos de propiedades parecidas: micro-mercados.
 POR QUE LOS DOS METODOS
 -----------------------
   PCA  sobre las 29 dummies estandarizadas. Es lo que se declaro en el plan
-       de la 2da entrega. Una dummy no es una variable continua, asi que el
+       de la version anterior. Una dummy no es una variable continua, asi que el
        porcentaje de varianza de cada componente sale bajo y se lee con
        cuidado.
   MCA  analisis de correspondencias multiples sobre las mismas 29 (como

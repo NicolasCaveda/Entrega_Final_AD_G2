@@ -2,7 +2,7 @@
 ==========================================================================
 INGENIERIA DE VARIABLES DESDE TEXTO LIBRE
 ==========================================================================
-Fecha        : 2026-11-13 10:59
+Fecha        : 2026-11-13 11:50
 Filas        : 12,097
 Largo del texto por aviso: mediana 1,599 caracteres, minimo 37, maximo 13,911
 Avisos con texto insuficiente (<20 caracteres): 0
@@ -14,7 +14,7 @@ Variables de estructura extraidas del texto: 5
     n_amenities: mediana 3, maximo 15 sobre 15 posibles
 
 ==========================================================================
-AUDITORIA: SUBCADENA (1ra entrega) CONTRA REGEX
+AUDITORIA: SUBCADENA (version inicial) CONTRA REGEX
 ==========================================================================
 atributo               viejo %   nuevo %  delta pp    0->1    1->0
 ------------------------------------------------------------------
