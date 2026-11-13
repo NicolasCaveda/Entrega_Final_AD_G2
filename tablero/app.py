@@ -334,6 +334,7 @@ def tip(texto: str) -> str:
 
 # --- Encabezado -------------------------------------------------------------------
 lo_p, hi_p = S.PRESUPUESTO_USD
+COBERTURA = T.cobertura_banda()
 LIMITACIONES = [
     ("Precios de publicación",
      "Son precios de publicación, no de cierre. La venta y el alquiler son precios pedidos; "
@@ -344,7 +345,8 @@ LIMITACIONES = [
      "probablemente están del lado alto."),
     ("Cada rentabilidad es una banda",
      "Cada rentabilidad es una banda, no un número. El alquiler es una estimación: su banda "
-     "del percentil 10 al 90 contiene al 82% de los alquileres reales."),
+     f"del percentil 10 al 90 contiene al {COBERTURA}% de los avisos de alquiler de RE/MAX que el modelo "
+     "no vio al ajustarse (cobertura fuera de muestra)."),
 ]
 st.html(
     f'<header class="cabecera"><div><h1>¿Conviene comprar para alquilar?</h1>'
@@ -761,8 +763,9 @@ LIMITACIONES_COMPLETAS = [
     ("Precios de publicación, no de cierre", "del lado de la venta y del alquiler."),
     ("Una sola inmobiliaria", "RE/MAX publica alrededor de 8% más barato que el mercado y está sesgada en "
                               "cobertura geográfica: las rentabilidades probablemente están del lado alto."),
-    ("Cada rentabilidad es una banda", "el alquiler es estimado; su banda p10–p90 contiene al 82% de los "
-                                       "alquileres reales."),
+    ("Cada rentabilidad es una banda", f"el alquiler es estimado; su banda p10–p90 contiene al {COBERTURA}% de "
+                                       "los avisos de alquiler de RE/MAX fuera de muestra (no se midió sobre "
+                                       "contratos ni sobre otros portales)."),
     ("Casas y PH fuera de las recomendaciones", "hay muy pocos alquileres observados."),
     ("Sin apreciación, costos de salida ni riesgo legal", "la TIR supone reventa al mismo precio en "
                                                           "dólares; el riesgo legal no tiene fuente."),

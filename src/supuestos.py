@@ -293,6 +293,17 @@ REFACCION_INTEGRAL_ARS_M2 = 1_350_000  # RenovArqui feb-2026, + IVA
 IVA_GENERAL = 0.21
 # No se descuentan los meses de obra sin alquiler: el efecto real es mayor.
 
+# Cuanto sube el alquiler al refaccionar una unidad a reciclar. El modelo
+# podria decirlo solo (pasar a_reciclar de 1 a 0 y reciclado de 0 a 1), pero
+# el coeficiente de a_reciclar se apoya en 2 alquileres de los 1.348 que lo
+# entrenan: los avisos de alquiler casi nunca dicen "a reciclar". El caso base
+# toma solo el efecto de reciclado, que se estima con 131 alquileres; la
+# sensibilidad prueba sin suba y con el efecto completo del modelo. Los
+# factores salen del modelo guardado (modelo_alquiler.factores_suba_refaccion).
+SUBA_REFACCION = "reciclado"     # supuesto; ver SENSIBILIDAD_SUBA_REFACCION
+SENSIBILIDAD_SUBA_REFACCION = ["sin", "reciclado", "modelo"]
+SENSIBILIDAD_REFACCION = ["base", "alto"]
+
 # --- 3g. Riesgo legal ---------------------------------------------------------
 # LIMITACION DECLARADA, NO UN NUMERO. Juicios de desalojo, inquilinos que no
 # pagan, cambios de regimen como el de la Ley 27.551 y el DNU 70/2023: no hay
@@ -321,16 +332,46 @@ SENSIBILIDAD_ENTRADA = ["sin", "base", "alto"]
 # menos que un bono en dolares, el inversor esta pagando la iliquidez del
 # inmueble en vez de cobrarla.
 #
-# La banda son las ON corporativas en USD de primera linea: es la alternativa
+# La vara son las ON corporativas en USD de primera linea: es la alternativa
 # de renta fija que un ahorrista puede comprar con el mismo capital, en
-# dolares y con riesgo argentino, igual que el inmueble. Va como banda y no
-# como numero porque el plazo cambia la tasa: 7,1% a 5 anios, 7,6% a 11.
-TIR_ON_YPF_2031 = 7.1            # YMCXO, Ambito jul-2026
-TIR_ON_PAMPA_2037 = 7.6          # MGCRO, Ambito jul-2026
+# dolares y con riesgo argentino, igual que el inmueble. Se lee en una CURVA
+# por plazo (curva_on.py): precios de mercado de la API de data912.com y
+# terminos de 31 ON bullet de YPF, Pampa, Pan American, Pluspetrol, TGS y
+# Telecom (Criteria, Reporte de ON 2T2026). Comparar contra un bono de otro
+# plazo mezcla la prima por plazo con la prima por elegir el inmueble.
+#
+# La vara de P1 es la mediana de la TIR de las ON que vencen a HORIZONTE_ANIOS
+# +- 1 anio; la banda de la sensibilidad, su p25 y su p75. Los numeros salen
+# de los precios guardados en data/external/on_precios.csv, con su fecha.
 
-RETORNO_MIN_PISO_PCT = min(TIR_ON_YPF_2031, TIR_ON_PAMPA_2037)
-RETORNO_MIN_TECHO_PCT = max(TIR_ON_YPF_2031, TIR_ON_PAMPA_2037)
+# ==========================================================================
+# 4b. HORIZONTE
+# ==========================================================================
+# Cinco anios: cubren dos contratos completos de DURACION_CONTRATO_MESES con
+# sus rotaciones, y son un plazo con ON liquidas de varios emisores. Es un
+# parametro del problema, como el presupuesto: si el cliente declara otro
+# horizonte se cambia aca y la vara sale de la curva en ese plazo
+# (decision.py lo prueba a 3 anios).
+HORIZONTE_ANIOS = 5              # parametro del problema
+SENSIBILIDAD_HORIZONTE = [3]     # otro plazo con ON suficientes en la curva
+
+from curva_on import curva as _curva_on, tir_al_plazo as _tir_al_plazo  # noqa: E402
+
+CURVA_ON = _curva_on()
+CURVA_ON_FECHA = CURVA_ON["fecha"].iloc[0]
+
+
+def retorno_minimo(horizonte: float = HORIZONTE_ANIOS) -> dict:
+    """Vara de P1 a `horizonte` anios: mediana, p25 y p75 de la curva de ON."""
+    return _tir_al_plazo(CURVA_ON, horizonte)
+
+
+_VARA = retorno_minimo()
+RETORNO_MIN_PCT = _VARA["mediana"]           # curva de ON a HORIZONTE_ANIOS
+RETORNO_MIN_PISO_PCT = _VARA["p25"]
+RETORNO_MIN_TECHO_PCT = _VARA["p75"]
 RETORNO_MINIMO_BANDA = (RETORNO_MIN_PISO_PCT, RETORNO_MIN_TECHO_PCT)
+RETORNO_MIN_N_ON = _VARA["n"]
 
 # Referencia, fuera de la banda: rendimiento soberano aproximado como
 # Treasury + riesgo pais (EMBI, J.P. Morgan). No es la vara del inversor: es
@@ -340,18 +381,6 @@ RETORNO_MINIMO_BANDA = (RETORNO_MIN_PISO_PCT, RETORNO_MIN_TECHO_PCT)
 UST_10A_PCT = 5.24               # ABC Color / Bloomberg Linea, 28-09-2026
 RIESGO_PAIS_PB = 641             # El Vocero / Indicadores AR, 28-09-2026
 RETORNO_SOBERANO_REF_PCT = round(UST_10A_PCT + RIESGO_PAIS_PB / 100, 2)
-
-
-# ==========================================================================
-# 4b. HORIZONTE
-# ==========================================================================
-# El horizonte de tenencia se fija igual al plazo de la ON que define el piso
-# de la banda (YMCXO vence en 2031): comparar un inmueble contra un bono solo
-# tiene sentido a plazo equivalente. Cinco anios cubren ademas dos contratos
-# completos de DURACION_CONTRATO_MESES con sus rotaciones.
-# Es un parametro del problema, como el presupuesto: si el cliente declara
-# otro horizonte, se cambia aca y la banda deberia elegir la ON de ese plazo.
-HORIZONTE_ANIOS = 5              # vencimiento YMCXO (2031) desde 2026
 
 
 # ==========================================================================
@@ -371,6 +400,13 @@ RADIO_CAMINATA_M = MINUTOS_CAMINATA * VELOCIDAD_CAMINATA_M_MIN
 # la relacion se prueba ademas con umbrales moviles.
 TRAMOS_DISTANCIA_M = [0, 300, 600, 1_000, 1_500]
 UMBRALES_H2_M = [400, 600, 800, 1_000, 1_200, 1_500]
+
+# Espacios verdes (credito_y_verdes.py): tramos de distancia a la plaza y al
+# parque mas cercanos. El ultimo tramo es la referencia. Cortes de lectura,
+# elegidos por la distribucion: la mitad de las ventas esta a menos de 280 m
+# de una plaza y a menos de 680 m de un parque.
+TRAMOS_PLAZA_M = [0, 150, 300, 500]
+TRAMOS_PARQUE_M = [0, 300, 600, 1_000]
 
 
 # ==========================================================================
@@ -439,6 +475,12 @@ MIN_CELDA_TEMPORAL = 20
 # 27%. Es el mismo minimo que para entrar al ranking de barrios
 # (MIN_VENTAS_BARRIO, seccion 5).
 MIN_ALQ_SOPORTE = 30
+
+# Alerta de la lista final: si la superficie cubierta es menos que esta parte
+# de la total, el aviso suma terrazas o patios grandes y el alquiler estimado
+# sobre la total puede estar alto. Criterio propio, para la revision a mano:
+# alerta, no excluye.
+MIN_CUBIERTA_SOBRE_TOTAL = 0.7    # criterio propio
 
 # Margen por liquidez de P1: cuanto tiene que superar la neta pesimista al
 # techo de la banda para pagar que el inmueble tarda meses en venderse y el
@@ -538,12 +580,13 @@ def tabla() -> str:
         f"+ pintura (base); integral ARS {REFACCION_INTEGRAL_ARS_M2:,}/m2 + IVA (alto)",
         "    riesgo legal         : limitacion declarada, sin numero",
         "",
-        f"Retorno minimo (banda)   : {RETORNO_MIN_PISO_PCT:.2f}% a {RETORNO_MIN_TECHO_PCT:.2f}%  "
-        f"(ON corporativas USD, 2031 a 2037)",
+        f"Retorno minimo (P1)      : {RETORNO_MIN_PCT:.2f}%  mediana de {RETORNO_MIN_N_ON} ON corporativas USD "
+        f"a {HORIZONTE_ANIOS} +- 1 anios ({CURVA_ON_FECHA})",
+        f"    banda (p25 a p75)    : {RETORNO_MIN_PISO_PCT:.2f}% a {RETORNO_MIN_TECHO_PCT:.2f}%",
         "    restriccion del analisis, no recomendacion de inversion",
         f"    referencia soberana  : {RETORNO_SOBERANO_REF_PCT:.2f}%  "
         f"(Treasury 10 anios + {RIESGO_PAIS_PB} pb)",
-        f"Horizonte                : {HORIZONTE_ANIOS} anios  (plazo de la ON del piso)",
+        f"Horizonte                : {HORIZONTE_ANIOS} anios  (parametro del problema)",
     ]
     return "\n".join(l)
 

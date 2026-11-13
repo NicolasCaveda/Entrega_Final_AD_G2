@@ -2,7 +2,7 @@
 ============================================================================
 SESGO DE LA CARTERA DE RE/MAX
 ============================================================================
-Fecha: 2026-10-29 16:52
+Fecha: 2026-11-13 11:02
 
 ============================================================================
 1. PRECIO: m2 publicado por RE/MAX contra IDECBA (Argenprop)
@@ -12,7 +12,7 @@ Variacion de IDECBA entre 2026-T1 y 2026-T2 (total ciudad): hasta 0.8% en valor 
 desvios mayores a eso.
 
 Total ciudad (todas las celdas, sin minimo):
-    1 amb estrenar  RE/MAX USD  2,685  IDECBA USD  3,105  desvio  -13.5%  (n=317)
+    1 amb estrenar  RE/MAX USD  2,687  IDECBA USD  3,105  desvio  -13.5%  (n=317)
     2 amb estrenar  RE/MAX USD  2,750  IDECBA USD  3,215  desvio  -14.5%  (n=355)
     3 amb estrenar  RE/MAX USD  2,803  IDECBA USD  3,349  desvio  -16.3%  (n=207)
     1 amb usado     RE/MAX USD  2,345  IDECBA USD  2,561  desvio   -8.5%  (n=1,304)

@@ -1,0 +1,32 @@
+especie,emisor,clase,isin,ley,vencimiento,cupon_pct,pagos_por_anio,amortizacion,tir_criteria_pct,mdur_criteria
+YM41,YPF,Clase 41,AR0675705039,Argentina,2027-01-08,6.00,4,bullet,2.93,0.50
+YM35,YPF,Clase 35,AR0929824099,Argentina,2027-02-27,6.25,4,bullet,3.01,0.64
+PN42,Pan American,Clase 42,AR0081130814,Argentina,2027-04-17,6.00,2,bullet,3.00,0.76
+YCAM,YPF,Clase 53,USP989MJBL47,Nueva York,2027-07-21,6.95,2,bullet,3.87,0.98
+YM38,YPF,Clase 38,AR0419238511,Argentina,2027-07-22,7.50,4,bullet,3.93,1.00
+PN38,Pan American,Clase 38,AR0554009248,Argentina,2027-08-11,6.50,2,bullet,0.62,1.06
+PLC1,Pluspetrol,Clase 01,AR0502588418,Argentina,2028-01-27,6.00,2,bullet,4.89,1.47
+PLC3,Pluspetrol,Clase 03,AR0808016403,Argentina,2028-04-30,7.25,2,bullet,4.74,1.66
+MGCQ,Pampa Energia,Clase 25,AR0519406398,Argentina,2028-08-06,7.25,2,bullet,4.30,1.89
+YM40,YPF,Clase 40,AR0963751125,Argentina,2028-08-28,7.50,4,bullet,5.45,1.97
+MGCN,Pampa Energia,Clase 22,AR0765746752,Argentina,2028-10-04,5.75,2,bullet,4.63,2.08
+YMCY,YPF,Clase 33,AR0079616063,Argentina,2028-10-10,6.50,4,bullet,5.19,2.08
+PLC6,Pluspetrol,Clase 06,AR0559091100,Argentina,2029-02-27,6.50,2,bullet,5.54,2.37
+TLCU,Telecom,Clase 28,AR0857544677,Argentina,2029-03-05,6.50,2,bullet,5.88,2.38
+MGCT,Pampa Energia,Clase 27,AR0145481872,Argentina,2029-04-01,5.49,2,bullet,5.06,2.49
+MGC3,Pampa Energia,Clase 03,USP7464EAB22,Nueva York,2029-04-15,9.13,2,bullet,7.43,2.40
+YMC1,YPF,Clase 01,USP989MJBP50,Nueva York,2029-06-27,8.50,2,bullet,6.04,2.63
+PN41,Pan American,Clase 41,AR0299198264,Argentina,2029-08-27,7.50,2,bullet,5.30,2.74
+PN35,Pan American,Clase 35,AR0623274765,Argentina,2029-09-27,7.00,2,bullet,5.36,2.84
+PLC2,Pluspetrol,Clase 02,AR0036431960,Argentina,2030-01-27,7.50,2,bullet,5.88,3.08
+YM43,YPF,Clase 43,AR0156884063,Argentina,2030-04-14,5.50,2,bullet,5.38,3.54
+YM39,YPF,Clase 39,AR0081455617,Argentina,2030-07-22,8.75,2,bullet,5.98,3.31
+PLC5,Pluspetrol,Clase 05,USP7924AAC29,Nueva York,2031-05-18,8.13,2,bullet,6.63,3.98
+TSC3,TGS,Clase 03,USP9308RBA07,Nueva York,2031-07-24,8.50,2,bullet,6.32,4.00
+MGCM,Pampa Energia,Clase 21,USP7464EAS56,Nueva York,2031-09-10,7.95,2,bullet,6.03,4.17
+PN36,Pan American,Clase 36,AR0677571967,Argentina,2031-11-13,7.25,2,bullet,5.86,4.40
+PLC4,Pluspetrol,Clase 04,USP7924AAA62,Nueva York,2032-05-30,8.50,2,bullet,6.97,4.63
+MGCO,Pampa Energia,Clase 23,USP7464EAT30,Nueva York,2034-12-16,7.88,2,bullet,6.87,6.18
+TSC4,TGS,Clase 04,USP9308RBB89,Nueva York,2035-11-20,7.75,2,bullet,6.91,6.65
+MGCR,Pampa Energia,Clase 26,USP7464EAY25,Nueva York,2037-11-14,7.75,2,bullet,7.14,7.53
+YCAN,YPF,Clase 54,USP989MJBN03,Nueva York,2047-12-15,7.00,2,bullet,7.72,10.66

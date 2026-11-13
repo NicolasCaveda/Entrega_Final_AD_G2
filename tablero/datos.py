@@ -33,6 +33,13 @@ import supuestos as S
 
 DATASET = os.path.join(RAIZ, "data", "processed", "dataset_analitico.csv")
 RANKING = os.path.join(RAIZ, "data", "processed", "ranking_barrios.csv")
+COBERTURA = os.path.join(RAIZ, "data", "processed", "cobertura_banda.csv")
+
+
+def cobertura_banda(ruta: str = COBERTURA) -> int:
+    """Cobertura fuera de muestra de la banda p10-p90, en % entero (la mide kpis.py)."""
+    t = pd.read_csv(ruta, encoding="utf-8-sig").set_index("banda")
+    return int(round(t.loc["vigente", "cobertura"] * 100))
 
 # Las de GUIA_TABLERO.md ("Columnas para el tablero"), mas las del filtro de
 # carga y la fecha del relevamiento para el encabezado.

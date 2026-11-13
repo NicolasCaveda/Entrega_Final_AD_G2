@@ -2,7 +2,7 @@
 ============================================================================
 FUSION ESPACIAL
 ============================================================================
-Fecha   : 2026-10-29 16:52
+Fecha   : 2026-11-13 11:00
 Entrada : data/processed/dataset_variables.csv
 
 ============================================================================
@@ -95,4 +95,4 @@ un promedio barrial les asignaria a todos el mismo acceso.
     villa pueyrredon          123     336      590     801    89.4%
     coghlan                    98     174      614     796    89.8%
 
-Archivo: data/processed/dataset_espacial.csv  (12,097 filas x 95 columnas, 8 nuevas)
+Archivo: data/processed/dataset_espacial.csv  (12,097 filas x 96 columnas, 8 nuevas)

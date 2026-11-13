@@ -3,11 +3,12 @@
 decision.py — La funcion de decision prescriptiva: P1, P2 y P3, implementadas
 y evaluadas.
 
-LAS TRES DECISIONES (formuladas en el README de la 2da entrega)
+LAS TRES DECISIONES
 ---------------------------------------------------------------
   P1  comprar o no: se recomienda la propiedad solo si su rentabilidad neta
-      calculada sobre el EXTREMO INFERIOR de su banda supera el techo de la
-      banda de retorno minimo, mas un margen por liquidez
+      calculada sobre el EXTREMO INFERIOR de su banda supera la TIR de las ON
+      corporativas en USD al mismo plazo (curva_on.py), mas un margen por
+      liquidez
   P2  que propiedad: A sobre B solo si sus bandas NO se superponen (la neta
       pesimista de A supera la optimista de B)
   P3  tradicional o temporal: neta contra neta, por la ocupacion de
@@ -27,6 +28,14 @@ soporte el alquiler estimado es extrapolacion, y sin el filtro las dos
 primeras decisiones recomiendan justo las casas de 6 a 10 ambientes donde el
 modelo menos sabe.
 
+EL PRECIO TIENE QUE SER EL TOTAL
+--------------------------------
+Quedan afuera las ventas con financiacion del vendedor o en pozo
+(variables.py): el precio publicado suele ser solo la parte al contado, y la
+unidad en pozo no se alquila hasta la entrega. Ademas, las listas finales se
+leyeron a mano (titulo y descripcion); lo que no corresponde se excluye o se
+alerta en data/reference/revision_listas.csv, con su motivo.
+
 EVALUAR, NO SOLO IMPLEMENTAR
 ----------------------------
   - cuantas propiedades pasan P1, con y sin costos de entrada
@@ -43,6 +52,8 @@ Entradas:
     data/processed/dataset_analitico.csv
     data/processed/temporal_vs_tradicional.csv
     data/external/estadistica_ciudad_tiempo_publicacion.csv
+    data/processed/modelo_alquiler.joblib     factores de suba por refaccion
+    data/reference/revision_listas.csv        revision a mano de las listas
 Salidas:
     data/processed/dataset_analitico.csv     + las columnas de COLUMNAS_DECISION
     data/processed/decision_sensibilidad.csv  P1 y P2 en cada escenario
@@ -56,17 +67,20 @@ import os
 import sys
 from datetime import datetime
 
+import joblib
 import numpy as np
 import pandas as pd
 
 import costos as C
 import supuestos as S
-from modelo_alquiler import Reporte
+from modelo_alquiler import Reporte, factores_suba_refaccion
 
 
 ANALITICO = "data/processed/dataset_analitico.csv"
 TEMPORAL = "data/processed/temporal_vs_tradicional.csv"
 LIQUIDEZ = "data/external/estadistica_ciudad_tiempo_publicacion.csv"
+MODELO = "data/processed/modelo_alquiler.joblib"
+REVISION = "data/reference/revision_listas.csv"
 SALIDA_SENS = "data/processed/decision_sensibilidad.csv"
 SALIDA_P3 = "data/processed/decision_p3.csv"
 REPORTE = "data/processed/reporte_decision.txt"
@@ -74,7 +88,8 @@ REPORTE = "data/processed/reporte_decision.txt"
 # Columnas que este script agrega al dataset analitico. Si ya estan (una
 # corrida anterior), se reemplazan: correrlo dos veces da el mismo archivo.
 COLUMNAS_DECISION = [
-    "en_presupuesto", "n_alq_celda_tipo", "en_soporte_modelo", "universo_decision",
+    "en_presupuesto", "n_alq_celda_tipo", "en_soporte_modelo", "precio_es_total",
+    "excluida_revision", "alerta_revision", "universo_decision",
     "neta_min_pct", "neta_max_pct", "tir_5a_min_pct",
     "p1_comprar", "p1_comprar_con_entrada", "p2_no_dominada",
     "m2_relativo_celda", "dias_publicacion_ambientes",
@@ -82,7 +97,8 @@ COLUMNAS_DECISION = [
 ]
 
 BASE = {"vacancia": S.VACANCIA_PCT, "gastos_sin_abl": S.GASTOS_SIN_ABL_PCT, "abl": "segmentado",
-        "entrada": "base", "umbral": S.RETORNO_MIN_TECHO_PCT, "margen": S.MARGEN_LIQUIDEZ_PCT}
+        "entrada": "base", "refaccion": "base", "suba": S.SUBA_REFACCION, "horizonte": S.HORIZONTE_ANIOS,
+        "umbral": S.RETORNO_MIN_PCT, "margen": S.MARGEN_LIQUIDEZ_PCT}
 
 
 # ==========================================================================
@@ -117,17 +133,25 @@ def bandas(v: pd.DataFrame, vacancia: float, gastos_sin_abl: float, abl_ars) -> 
     }, index=v.index)
 
 
-def tir_pesimista(v: pd.DataFrame, vacancia: float, gastos_sin_abl: float, abl_ars,
-                  entrada: str) -> pd.Series:
+def tir_pesimista(v: pd.DataFrame, vacancia: float, gastos_sin_abl: float, abl_ars, entrada: str,
+                  factores: dict, refaccion: str = "base", suba: str = S.SUBA_REFACCION,
+                  horizonte: int = S.HORIZONTE_ANIOS) -> pd.Series:
     """
-    TIR a 5 anios con el alquiler del extremo inferior, los costos de entrada y
-    la refaccion. Las unidades a reciclar cobran el p10 escalado por lo que el
-    modelo dice que sube el alquiler al refaccionarlas, igual que kpis.py.
+    TIR a `horizonte` anios con el alquiler del extremo inferior, los costos
+    de entrada y la refaccion. Las unidades a reciclar cobran el p10 por el
+    factor de suba del escenario `suba` (`factores`, de
+    modelo_alquiler.factores_suba_refaccion) y pagan la obra del escenario
+    `refaccion`.
+
+    Los costos de entrada y la refaccion son parametros SEPARADOS: un
+    escenario sin costos de entrada no puede cobrar el alquiler refaccionado
+    sin pagar la obra.
     """
-    sube = (v["alquiler_post_refaccion_usd_mes"] / v["alquiler_est_usd_mes"]).fillna(1.0)
+    sube = np.where(v["a_reciclar"].fillna(0) == 1, factores[suba], 1.0)
     n = neta(v["alquiler_p10_usd_mes"] * sube, v["venta_usd"], abl_ars, vacancia, gastos_sin_abl)
-    inicial = C.costos_entrada_pct(v["venta_usd"], entrada) + C.refaccion_usd(v, entrada) / v["venta_usd"] * 100
-    return pd.Series(C.tir(n, inicial), index=v.index)
+    inicial = (C.costos_entrada_pct(v["venta_usd"], entrada)
+               + C.refaccion_usd(v, refaccion) / v["venta_usd"] * 100)
+    return pd.Series(C.tir(n, inicial, anios=horizonte), index=v.index)
 
 
 # ==========================================================================
@@ -196,11 +220,26 @@ def ocupacion_equilibrio(t: pd.DataFrame, vacancia: float, autogestion: bool = F
 # ESCENARIOS
 # ==========================================================================
 
-def universo(df: pd.DataFrame) -> pd.DataFrame:
+def leer_revision(ruta: str = REVISION) -> pd.DataFrame:
+    """La revision a mano de las listas: id_aviso, accion (excluir o alertar) y motivo."""
+    if not os.path.exists(ruta):
+        return pd.DataFrame(columns=["id_aviso", "accion", "motivo"])
+    r = pd.read_csv(ruta, encoding="utf-8-sig")
+    malas = set(r["accion"]) - {"excluir", "alertar"}
+    if malas:
+        raise ValueError(f"{ruta}: acciones desconocidas {malas}")
+    return r
+
+
+def universo(df: pd.DataFrame, revision: pd.DataFrame | None = None) -> pd.DataFrame:
     """
-    Ventas con estimacion confiable, dentro del presupuesto y con su soporte:
-    cuantos alquileres observados hay en su celda tipo x tramo de superficie.
+    Ventas con estimacion confiable, dentro del presupuesto, con su soporte
+    (cuantos alquileres observados hay en su celda tipo x tramo de superficie),
+    con un precio publicado que es el total (sin financiacion ni pozo) y que
+    la revision a mano no excluyo.
     """
+    if revision is None:
+        revision = leer_revision()
     alq = df[df["operacion"] == "alquiler"]
     n_celda = alq.groupby(["tipo_familia", "superficie_rango"]).size()
     v = df[(df["operacion"] == "venta") & (df["estimacion_confiable"] == 1)
@@ -209,16 +248,31 @@ def universo(df: pd.DataFrame) -> pd.DataFrame:
                              .fillna(0).astype(int).values)
     v["en_presupuesto"] = v["venta_usd"].between(*S.PRESUPUESTO_USD)
     v["en_soporte_modelo"] = v["n_alq_celda_tipo"] >= S.MIN_ALQ_SOPORTE
-    v["universo_decision"] = v["en_presupuesto"] & v["en_soporte_modelo"]
+    v["precio_es_total"] = (v["financiacion"].fillna(0) != 1) & (v["en_pozo"].fillna(0) != 1)
+    excl = revision.loc[revision["accion"] == "excluir"].set_index("id_aviso")["motivo"]
+    alerta = revision.loc[revision["accion"] == "alertar"].set_index("id_aviso")["motivo"]
+    v["excluida_revision"] = v["id_aviso"].isin(excl.index)
+    texto = v["id_aviso"].map(pd.concat([excl, alerta]))
+    regex = (v["uso_no_residencial"].fillna(0) == 1) & texto.isna()
+    texto = texto.where(~regex, "El aviso menciona oficina o uso mixto (RegEx, sin revisar a mano).")
+    # La superficie total suma terrazas y patios, que pagan poco alquiler: si
+    # la cubierta es una parte chica, el alquiler estimado puede estar alto.
+    cub = v["sup_cubierta_m2"] / v["sup_total_m2"]
+    poca = (cub < S.MIN_CUBIERTA_SOBRE_TOTAL) & texto.isna()
+    v["alerta_revision"] = texto.where(~poca, "Solo " + (cub * 100).round(0).astype("Int64").astype(str)
+                                       + "% de la superficie es cubierta: el alquiler estimado sobre la total puede estar alto.")
+    v["universo_decision"] = (v["en_presupuesto"] & v["en_soporte_modelo"] & v["precio_es_total"]
+                              & ~v["excluida_revision"])
     return v
 
 
-def escenario(u: pd.DataFrame, abl_tope: pd.Series, vacancia: float, gastos_sin_abl: float, abl: str,
-              entrada: str, umbral: float, margen: float) -> dict:
+def escenario(u: pd.DataFrame, abl_tope: pd.Series, factores: dict, vacancia: float, gastos_sin_abl: float,
+              abl: str, entrada: str, refaccion: str, suba: str, horizonte: int, umbral: float,
+              margen: float) -> dict:
     """P1 y P2 sobre el universo `u` con un juego de supuestos."""
     ars = abl_segun(u, abl, abl_tope)
     b = bandas(u, vacancia, gastos_sin_abl, ars)
-    t = tir_pesimista(u, vacancia, gastos_sin_abl, ars, entrada)
+    t = tir_pesimista(u, vacancia, gastos_sin_abl, ars, entrada, factores, refaccion, suba, horizonte)
     p1 = b["neta_min"] > umbral + margen
     p1e = t > umbral + margen
     front = no_dominadas(b["neta_min"], b["neta_max"])
@@ -232,7 +286,7 @@ def jaccard(a: set, b: set) -> float:
     return len(a & b) / len(a | b) if (a | b) else 1.0
 
 
-def sensibilidad(u: pd.DataFrame, abl_tope: pd.Series) -> pd.DataFrame:
+def sensibilidad(u: pd.DataFrame, abl_tope: pd.Series, factores: dict) -> pd.DataFrame:
     """
     Un parametro por vez, los demas en el caso base, y dos extremos. Para
     cada escenario: cuantas pasan P1 (con y sin costos de entrada), el tamanio
@@ -245,21 +299,29 @@ def sensibilidad(u: pd.DataFrame, abl_tope: pd.Series) -> pd.DataFrame:
                     for d in S.SENSIBILIDAD_GASTOS_SIN_ABL_DELTA]
     variaciones += [("ABL", {"abl": x}) for x in S.SENSIBILIDAD_ABL]
     variaciones += [("costos de entrada", {"entrada": x}) for x in S.SENSIBILIDAD_ENTRADA]
+    variaciones += [("refaccion", {"refaccion": x}) for x in S.SENSIBILIDAD_REFACCION]
+    variaciones += [("suba por refaccion", {"suba": x}) for x in S.SENSIBILIDAD_SUBA_REFACCION]
     variaciones += [("banda de retorno", {"umbral": x}) for x in S.RETORNO_MINIMO_BANDA]
+    # Otro horizonte cambia las dos puntas: la TIR del inmueble (los costos se
+    # reparten en menos anios) y la vara (la ON de ese plazo).
+    variaciones += [("horizonte", {"horizonte": h, "umbral": S.retorno_minimo(h)["mediana"]})
+                    for h in S.SENSIBILIDAD_HORIZONTE]
     variaciones += [("margen por liquidez", {"margen": x}) for x in S.SENSIBILIDAD_MARGEN]
     variaciones += [
         ("extremo favorable", {"vacancia": min(S.SENSIBILIDAD_VACANCIA), "abl": "plano", "entrada": "sin",
+                               "refaccion": "base", "suba": "modelo",
                                "gastos_sin_abl": round(S.GASTOS_SIN_ABL_PCT + min(S.SENSIBILIDAD_GASTOS_SIN_ABL_DELTA), 2),
                                "umbral": S.RETORNO_MIN_PISO_PCT, "margen": 0.0}),
         ("extremo desfavorable", {"vacancia": max(S.SENSIBILIDAD_VACANCIA), "abl": "segmentado_tope", "entrada": "alto",
+                                  "refaccion": "alto", "suba": "sin",
                                   "gastos_sin_abl": round(S.GASTOS_SIN_ABL_PCT + max(S.SENSIBILIDAD_GASTOS_SIN_ABL_DELTA), 2),
                                   "umbral": S.RETORNO_MIN_TECHO_PCT, "margen": max(S.SENSIBILIDAD_MARGEN)}),
     ]
-    base = escenario(u, abl_tope, **BASE)
+    base = escenario(u, abl_tope, factores, **BASE)
     filas = []
     for parametro, cambio in variaciones:
         p = {**BASE, **cambio}
-        e = escenario(u, abl_tope, **p)
+        e = escenario(u, abl_tope, factores, **p)
         filas.append({"parametro": parametro, **p,
                       "n_p1": e["n_p1"], "n_p1_con_entrada": e["n_p1_entrada"],
                       "jaccard_p1_vs_base": round(jaccard(e["p1"], base["p1"]), 3),
@@ -305,7 +367,7 @@ def dias_por_ambientes(ambientes: pd.Series, liq: pd.Series) -> pd.Series:
 # ==========================================================================
 
 def main() -> int:
-    for p in (ANALITICO, TEMPORAL, LIQUIDEZ):
+    for p in (ANALITICO, TEMPORAL, LIQUIDEZ, MODELO):
         if not os.path.exists(p):
             print(f"No existe {p}. Correr el pipeline hasta py src/temporal.py")
             return 1
@@ -320,20 +382,29 @@ def main() -> int:
     # de cada celda sale de todas las ventas, como en kpis.py.
     abl_tope = C.abl_por_propiedad(ventas, S.VFH_TOPE_SOBRE_MERCADO)["abl_ars_mes"]
 
-    v = universo(df)
+    factores = factores_suba_refaccion(joblib.load(MODELO)["pipeline"])
+    revision = leer_revision()
+    v = universo(df, revision)
     u = v[v["universo_decision"]]
     rep(f"Ventas con estimacion confiable: {len(v):,}. En el presupuesto (USD {S.PRESUPUESTO_USD[0]:,} a "
         f"{S.PRESUPUESTO_USD[1]:,}): {int(v['en_presupuesto'].sum()):,}")
     fuera = v[v["en_presupuesto"] & ~v["en_soporte_modelo"]]
     rep(f"    fuera del soporte del modelo (celda tipo x tramo con menos de {S.MIN_ALQ_SOPORTE} alquileres): "
         f"{len(fuera):,}, {fuera['tipo_familia'].value_counts().to_dict()}")
+    cand = v[v["en_presupuesto"] & v["en_soporte_modelo"]]
+    rep(f"    con financiacion del vendedor o en pozo (el precio publicado no es el total): "
+        f"{int((~cand['precio_es_total']).sum()):,} (financiacion {int((cand['financiacion'] == 1).sum())}, "
+        f"pozo {int((cand['en_pozo'] == 1).sum())})")
+    rep(f"    excluidas por la revision a mano: {int(cand['excluida_revision'].sum())}; "
+        f"con alerta: {int(cand['alerta_revision'].notna().sum())}")
     rep(f"    universo de la decision: {len(u):,}")
 
     # --- Caso base -----------------------------------------------------------
     b = bandas(v, BASE["vacancia"], BASE["gastos_sin_abl"], v["abl_ars_mes"])
     v["neta_min_pct"], v["neta_max_pct"] = b["neta_min"].round(2), b["neta_max"].round(2)
     v["tir_5a_min_pct"] = tir_pesimista(v, BASE["vacancia"], BASE["gastos_sin_abl"], v["abl_ars_mes"],
-                                        BASE["entrada"]).round(2)
+                                        BASE["entrada"], factores, BASE["refaccion"], BASE["suba"],
+                                        BASE["horizonte"]).round(2)
     umbral = BASE["umbral"] + BASE["margen"]
     v["p1_comprar"] = v["universo_decision"] & (v["neta_min_pct"] > umbral)
     v["p1_comprar_con_entrada"] = v["universo_decision"] & (v["tir_5a_min_pct"] > umbral)
@@ -347,8 +418,11 @@ def main() -> int:
 
     uu = v.loc[u.index]
     rep.titulo("P1: COMPRAR O NO COMPRAR")
-    rep(f"Criterio: neta del extremo inferior > techo de la banda ({BASE['umbral']:.2f}%) + margen por "
-        f"liquidez ({BASE['margen']:.2f} pp)")
+    rep(f"Criterio: neta del extremo inferior > TIR de las ON a {S.HORIZONTE_ANIOS} anios "
+        f"({BASE['umbral']:.2f}%, curva del {S.CURVA_ON_FECHA}) + margen por liquidez ({BASE['margen']:.2f} pp)")
+    rep(f"Suba del alquiler al refaccionar (supuesto '{BASE['suba']}'): "
+        f"{(factores[BASE['suba']] - 1) * 100:+.1f}%; con el efecto completo del modelo seria "
+        f"{(factores['modelo'] - 1) * 100:+.1f}%")
     rep(f"    pasan: {int(uu['p1_comprar'].sum())} de {len(uu):,} ({uu['p1_comprar'].mean():.1%})")
     rep(f"    con costos de entrada (TIR pesimista a {S.HORIZONTE_ANIOS} anios): "
         f"{int(uu['p1_comprar_con_entrada'].sum())}")
@@ -387,9 +461,10 @@ def main() -> int:
 
     # --- Sensibilidad ----------------------------------------------------------
     rep.titulo("SENSIBILIDAD")
-    sens = sensibilidad(u, abl_tope)
+    sens = sensibilidad(u, abl_tope, factores)
     p3 = sensibilidad_p3(t)
-    cols = ["parametro", "vacancia", "gastos_sin_abl", "abl", "entrada", "umbral", "margen",
+    cols = ["parametro", "vacancia", "gastos_sin_abl", "abl", "entrada", "refaccion", "suba", "horizonte",
+            "umbral", "margen",
             "n_p1", "n_p1_con_entrada", "jaccard_p1_vs_base", "n_frontera_p2", "jaccard_frontera_vs_base",
             "pares_distinguibles_pct"]
     rep(sens[cols].to_string(index=False))
@@ -401,8 +476,8 @@ def main() -> int:
     # --- Salidas ---------------------------------------------------------------
     nuevas = v[COLUMNAS_DECISION]
     out = df.join(nuevas)
-    for c in ["en_presupuesto", "en_soporte_modelo", "universo_decision", "p1_comprar",
-              "p1_comprar_con_entrada", "p2_no_dominada"]:
+    for c in ["en_presupuesto", "en_soporte_modelo", "precio_es_total", "excluida_revision",
+              "universo_decision", "p1_comprar", "p1_comprar_con_entrada", "p2_no_dominada"]:
         out[c] = out[c].astype("boolean")
     out["n_alq_celda_tipo"] = out["n_alq_celda_tipo"].astype("Int64")
     out.to_csv(ANALITICO, index=False, encoding="utf-8-sig")

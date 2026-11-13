@@ -318,6 +318,24 @@ def reportar_coeficientes(pipe: Pipeline, rep: Reporte) -> None:
 #      grupo se predice peor, se ensancha mas.
 # No mejora la estimacion puntual: mejora lo que se sabe de su confianza.
 
+def factores_suba_refaccion(pipe: Pipeline) -> dict:
+    """
+    Cuanto multiplica el alquiler refaccionar una unidad a reciclar, segun de
+    donde se tome el efecto (target en log: el factor es exp de coeficientes):
+
+      sin        1: la refaccion no sube el alquiler
+      reciclado  exp(b_reciclado): lo que cobra de mas un aviso reciclado
+                 contra uno comun. Es el caso base (supuestos.SUBA_REFACCION)
+      modelo     exp(b_reciclado - b_a_reciclar): pasar de "a reciclar" a
+                 "reciclado". b_a_reciclar sale de muy pocos alquileres
+                 a reciclar (los cuenta kpis.py), por eso no es el base.
+    """
+    nombres = [n.split("__")[-1] for n in pipe.named_steps["pre"].get_feature_names_out()]
+    b = dict(zip(nombres, pipe.named_steps["mod"].coef_))
+    return {"sin": 1.0, "reciclado": float(np.exp(b["reciclado"])),
+            "modelo": float(np.exp(b["reciclado"] - b["a_reciclar"]))}
+
+
 def pipeline_cuantil(cuantil: float, alpha: float) -> Pipeline:
     """El preprocesamiento del Ridge, con regresion cuantilica lineal."""
     p = construir_pipeline()

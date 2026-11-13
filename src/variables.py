@@ -27,7 +27,7 @@ morfologicas y —cuando corresponde— un veto por negacion previa.
 
 QUE PRODUCE
 -----------
-  - 31 variables dicotomicas con patrones auditables, una por atributo.
+  - 32 variables dicotomicas con patrones auditables, una por atributo.
   - 5 variables numericas extraidas del texto que no venian en el esquema
     (piso, orientacion, disposicion, superficie del texto, mencion de renta).
   - Un reporte que compara, atributo por atributo, la prevalencia del metodo
@@ -122,18 +122,41 @@ PATRONES = {
     "lavadero":          (r"\b(lavader[oa]s?)\b", True),
 
     # --- Estado y potencial -----------------------------------------------
-    "a_reciclar":        (r"\b(a\s+reciclar|a\s+refaccionar|para\s+refaccionar|para\s+reciclar|necesita\s+refaccion|a\s+poner\s+en\s+valor|para\s+remodelar|a\s+demoler)\b", False),
+    # "a refac" es la abreviatura de los titulos ("A refac. Financiacion"): el
+    # titulo tiene 50 caracteres y el corredor abrevia justo esta palabra.
+    "a_reciclar":        (r"\b(a\s+reciclar|a\s+refaccionar|a\s+refacc?|para\s+refaccionar|para\s+reciclar|necesita\s+refaccion|a\s+poner\s+en\s+valor|para\s+remodelar|a\s+demoler)\b", False),
     "reciclado":         (r"\b(reciclad[oa]s?|refaccionad[oa]s?|remodelad[oa]s?|puesto\s+en\s+valor|a\s+nuevo)\b", False),
     "estrenar":          (r"\b(a\s+estrenar|sin\s+estrenar|nuevo\s+a\s+estrenar|obra\s+nueva)\b", False),
-    "en_pozo":           (r"\b(en\s+pozo|desde\s+pozo|en\s+construccion|en\s+obra|preventa)\b", False),
+    # "pozo" solo, salvo el "pozo de aire y luz" de los edificios viejos. La
+    # fecha de entrega futura delata al pozo aunque el aviso no lo nombre: la
+    # unidad no se puede alquilar hasta entonces. 2027 en adelante porque los
+    # avisos son de 2026 y una entrega de este anio puede estar terminada.
+    "en_pozo":           (r"\b(en\s+pozo|desde\s+pozo|pozo(?!\s+de\s+aire)|en\s+construccion|en\s+obra|preventa"
+                          r"|fecha\s+(estimada\s+|aproximada\s+)?de\s+(entrega|posesion)"
+                          r"|(entrega|posesion)\s+((estimada|programada|proyectada|aproximada)\s+)?(para\s+|en\s+)?(\w+\s+){0,3}20(2[7-9]|3\d))\b", False),
     "luminoso":          (r"\b(muy\s+luminoso|luminos[oa]s?|vista\s+abierta|vista\s+panoramica|excelente\s+luz)\b", False),
 
     # --- Comercializacion (lo que importa al inversor) ---------------------
     "apto_credito":      (r"\b(apto\s+credito|apto\s+hipotecario|apto\s+para\s+credito)\b", True),
     "apto_profesional":  (r"\b(apto\s+profesional|uso\s+profesional|apto\s+oficina)\b", True),
+    # Mas fuerte que apto_profesional, que es un permiso habitual en vivienda:
+    # el aviso se ofrece como oficina o la unidad hoy esta dividida en un uso
+    # mixto. Es una ALERTA para la revision a mano de la lista final, no un
+    # filtro automatico (ver decision.py).
+    "uso_no_residencial": (r"\b(uso\s+mixto|sector\s+profesional|(departamento|depto|vivienda|piso)\s+(u\s+|o\s+|y\s+)?oficinas?"
+                           r"|oficinas?\s+(u\s+|o\s+|y\s+)?(departamento|depto|vivienda)"
+                           r"|ideal\s+(\w+\s+){0,2}oficinas?"
+                           r"|(funciona|funcionando|utilizad[oa]|usad[oa]|destinad[oa])\s+(actualmente\s+|hoy\s+)?como\s+(oficina|consultorio|estudio|local))\b", False),
     "renta_actual":      (r"\b(alquilad[oa]|con\s+inquilino|con\s+renta|renta\s+asegurada|contrato\s+vigente)\b", False),
     "oportunidad":       (r"\b(oportunidad|excelente\s+inversion|unica\s+oportunidad|imperdible|precio\s+de\s+ocasion)\b", False),
-    "financiacion":      (r"\b(financiacion|financiado|en\s+cuotas|plan\s+de\s+pago)\b", False),
+    # Cuando hay financiacion del vendedor, el precio publicado suele ser solo
+    # la parte al contado ("USD 91.000 mas 13 cuotas de USD 3.500"). Las cuotas
+    # cuentan con su numero o con su moneda. No cuenta la publicidad de un
+    # credito de terceros ("la simulacion de las cuotas", "hasta el 30% de la
+    # propiedad financiada"): ahi el precio publicado es el total.
+    "financiacion":      (r"\b(financiacion|financiado|financiamos|se\s+financia|en\s+cuotas|plan\s+de\s+pago"
+                          r"|\d+\s+(cuotas|ctas)|cuotas\s+(en\s+pesos|en\s+dolares|fijas|ajustadas|mensuales|trimestrales)"
+                          r"|ctas|anticipo|hipoteca\s+privada|saldo\s+(en|financiado))\b", False),
     "dueno_directo":     (r"\b(dueno\s+directo|propietario\s+directo|sin\s+comision|trato\s+directo)\b", False),
 }
 

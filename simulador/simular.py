@@ -186,6 +186,11 @@ def actualizar(entrega: str = ENTREGA_3) -> int:
                 "gastos_sin_abl_pct": S.GASTOS_SIN_ABL_PCT,
                 "presupuesto_usd": list(S.PRESUPUESTO_USD),
                 "retorno_minimo_pct": list(S.RETORNO_MINIMO_BANDA),
+                "retorno_minimo_vara_pct": S.RETORNO_MIN_PCT,
+                "curva_on_fecha": S.CURVA_ON_FECHA,
+                "curva_on_n": S.RETORNO_MIN_N_ON,
+                "suba_refaccion": S.SUBA_REFACCION,
+                "factor_suba_refaccion": M.factores_suba_refaccion(m["pipeline"])[S.SUBA_REFACCION],
                 "margen_liquidez_pct": S.MARGEN_LIQUIDEZ_PCT,
                 "horizonte_anios": S.HORIZONTE_ANIOS,
                 "min_alq_barrio": M.MIN_ALQ_BARRIO,
@@ -291,7 +296,7 @@ def superficie_rango(sup: pd.Series, P: dict) -> pd.Series:
     return pd.cut(sup, r["cortes"], labels=r["etiquetas"]).astype(str)
 
 
-def estimar_alquiler(props: pd.DataFrame, m: dict) -> pd.DataFrame:
+def estimar_alquiler(props: pd.DataFrame, m: dict, factor_suba: float) -> pd.DataFrame:
     """Alquiler central, percentiles 10 y 90 calibrados, y el post-refaccion."""
     X = props.copy()
     X["log_sup"] = np.log(X["sup_total_m2"].where(X["sup_total_m2"] > 0))
@@ -305,14 +310,10 @@ def estimar_alquiler(props: pd.DataFrame, m: dict) -> pd.DataFrame:
         "alquiler_p10_usd_mes": np.exp(np.minimum(a, c)).round(2),
         "alquiler_p90_usd_mes": np.exp(np.maximum(a, c)).round(2),
     }, index=props.index)
-    # Refaccionada: las mismas variables con a_reciclar = 0 y reciclado = 1
+    # Refaccionada: el alquiler estimado por el factor de suba del supuesto
+    # (supuestos.SUBA_REFACCION, igual que kpis.py)
     rec = props["a_reciclar"] == 1
-    post = pd.Series(np.nan, index=props.index)
-    if rec.any():
-        Xr = X.loc[rec].copy()
-        Xr["a_reciclar"], Xr["reciclado"] = 0, 1
-        post.loc[rec] = (np.exp(m["pipeline"].predict(Xr)) * m["smearing"]).round(2)
-    out["alquiler_post_refaccion_usd_mes"] = post
+    out["alquiler_post_refaccion_usd_mes"] = (out["alquiler_est_usd_mes"] * factor_suba).where(rec).round(2)
     return out
 
 
@@ -408,7 +409,7 @@ def simular(props: pd.DataFrame, m: dict, P: dict, vacancia: float | None = None
     r["estimacion_confiable"] = r["n_alq_barrio"] >= Sp["min_alq_barrio"]
     r["grupo_evidencia"] = grupo_evidencia(r["n_alq_barrio"], P)
     props["_ajuste_banda"] = r["grupo_evidencia"].map(P["banda"]["ajuste_log_por_grupo"])
-    r = r.join(estimar_alquiler(props, m))
+    r = r.join(estimar_alquiler(props, m, P["supuestos"]["factor_suba_refaccion"]))
     r["alquiler_est_m2"] = (r["alquiler_est_usd_mes"] / props["sup_total_m2"]).round(2)
     r["referencia_barrio_usd_mes"] = (props["barrio"].map(P["alquiler_m2_barrio"]) * props["sup_total_m2"]).round(0)
 
@@ -462,7 +463,7 @@ def simular(props: pd.DataFrame, m: dict, P: dict, vacancia: float | None = None
     r["tir_5a_min_pct"] = pd.Series(tir(n_min, inicial, Sp["horizonte_anios"]), index=r.index).round(2)
     r["en_presupuesto"] = venta.between(*Sp["presupuesto_usd"])
     r["universo_decision"] = r["estimacion_confiable"] & r["en_presupuesto"] & r["en_soporte_modelo"]
-    umbral = Sp["retorno_minimo_pct"][1] + Sp["margen_liquidez_pct"]
+    umbral = Sp["retorno_minimo_vara_pct"] + Sp["margen_liquidez_pct"]
     r["p1_comprar"] = r["universo_decision"] & (r["neta_min_pct"] > umbral)
     r["p1_comprar_con_entrada"] = r["universo_decision"] & (r["tir_5a_min_pct"] > umbral)
     lo = np.array(P["mercado"]["universo_neta_min_pct"])
@@ -524,7 +525,8 @@ def mostrar(prop: dict, r: pd.Series, P: dict, vacancia: float) -> None:
     titulo("ALQUILER ESTIMADO")
     print(f"  {usd(r['alquiler_est_usd_mes'])} por mes  (USD {num(r['alquiler_est_m2'], 1)} por m²)")
     print(f"  Banda p10-p90  : {usd(r['alquiler_p10_usd_mes'])} a {usd(r['alquiler_p90_usd_mes'])}")
-    print("                   fuera de muestra, 8 de cada 10 alquileres reales caen en su banda")
+    print(f"                   cobertura fuera de muestra sobre avisos de alquiler de RE/MAX: "
+          f"{num(P['origen']['cobertura_banda_calibrada'] * 100, 0)}%")
     if pd.notna(r["referencia_barrio_usd_mes"]):
         dif = (r["alquiler_est_usd_mes"] / r["referencia_barrio_usd_mes"] - 1) * 100
         print(f"  Control        : con el alquiler mediano por m² de {barrio} daría "
@@ -580,7 +582,9 @@ def mostrar(prop: dict, r: pd.Series, P: dict, vacancia: float) -> None:
     print("                      reventa al mismo precio en dólares, sin apreciación ni costos de salida")
 
     titulo("DECISIÓN")
-    print(f"  Vara    : banda de retorno mínimo de {pct(piso)} a {pct(techo)} (TIR de una ON en dólares)")
+    vara = Sp["retorno_minimo_vara_pct"]
+    print(f"  Vara    : {pct(vara)}, TIR de las ON corporativas en dólares a {Sp['horizonte_anios']} años "
+          f"(banda {pct(piso)} a {pct(techo)}; precios del {Sp['curva_on_fecha']})")
     print(f"  Mercado : neta mediana {pct(M_['neta_mediana_pct'])}, TIR mediana {pct(M_['tir_mediana_pct'])} "
           f"({num(M_['n_ventas_confiables'])} ventas)")
     print()
@@ -600,7 +604,7 @@ def mostrar(prop: dict, r: pd.Series, P: dict, vacancia: float) -> None:
         faltan.append("su barrio tiene pocos alquileres")
     if not r["en_soporte_modelo"]:
         faltan.append("está fuera del soporte del modelo")
-    umbral = techo + Sp["margen_liquidez_pct"]
+    umbral = vara + Sp["margen_liquidez_pct"]
     print()
     if faltan:
         print(f"  P1 ¿comprar?    : fuera del universo de la decisión: {'; '.join(faltan)}.")

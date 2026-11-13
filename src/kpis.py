@@ -264,19 +264,28 @@ def aplicar_abl(vta: pd.DataFrame, rep: M.Reporte) -> tuple[pd.DataFrame, float]
     return vta, proporcion
 
 
-def alquiler_post_refaccion(vta: pd.DataFrame, pipe, smear: float) -> pd.Series:
+def alquiler_post_refaccion(vta: pd.DataFrame, pipe, escenario: str = S.SUBA_REFACCION) -> pd.Series:
     """
-    Alquiler que el modelo estima para las unidades a reciclar una vez
-    refaccionadas: las mismas variables, con a_reciclar = 0 y reciclado = 1.
-    Sin esto, la refaccion se cobraria sin su beneficio.
+    Alquiler de las unidades a reciclar una vez refaccionadas: el estimado
+    por el factor de suba del escenario (supuestos.SUBA_REFACCION). Sin esto,
+    la refaccion se cobraria sin su beneficio.
     """
     rec = vta["a_reciclar"] == 1
-    X = vta.loc[rec, M.NUMERICAS + M.CATEGORICAS + M.DUMMIES].copy()
-    X["a_reciclar"], X["reciclado"] = 0, 1
-    post = pd.Series(np.nan, index=vta.index)
-    if rec.any():
-        post.loc[rec] = (np.exp(pipe.predict(X)) * smear).round(2)
-    return post
+    factor = M.factores_suba_refaccion(pipe)[escenario]
+    return (vta["alquiler_est_usd_mes"] * factor).where(rec).round(2)
+
+
+def reportar_suba_refaccion(alq: pd.DataFrame, pipe, rep: M.Reporte) -> None:
+    """Con cuantos alquileres se estima cada efecto, y que factor usa cada escenario."""
+    f = M.factores_suba_refaccion(pipe)
+    rep.titulo("SUBA DEL ALQUILER AL REFACCIONAR (SUPUESTO)")
+    rep(f"Alquileres que entrenan el modelo: {len(alq):,}; a reciclar: {int((alq['a_reciclar'] == 1).sum())}; "
+        f"reciclados: {int((alq['reciclado'] == 1).sum())}")
+    for k, v in f.items():
+        marca = "  <- caso base" if k == S.SUBA_REFACCION else ""
+        rep(f"    {k:<10} {(v - 1) * 100:+5.1f}%{marca}")
+    rep("El efecto de a_reciclar se apoya en los pocos alquileres a reciclar: por eso el caso base")
+    rep("toma solo el de reciclado y la decision prueba los otros dos (decision.py).")
 
 
 def neta_escenario(vta: pd.DataFrame, vacancia: float, abl: str, abl_tope: pd.Series,
@@ -544,7 +553,8 @@ def main() -> int:
     vta = M.imputar(vta, pipe, smear, cobertura, rep)
     banda, info_banda = M.banda_cuantilica(alq, vta, rep)
     vta = vta.join(banda)
-    vta["alquiler_post_refaccion_usd_mes"] = alquiler_post_refaccion(vta, pipe, smear)
+    vta["alquiler_post_refaccion_usd_mes"] = alquiler_post_refaccion(vta, pipe)
+    reportar_suba_refaccion(alq, pipe, rep)
 
     vta, proporcion = aplicar_abl(vta, rep)
     abl_tope = C.abl_por_propiedad(vta, S.VFH_TOPE_SOBRE_MERCADO)["abl_ars_mes"]

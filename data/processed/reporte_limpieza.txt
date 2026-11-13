@@ -2,7 +2,7 @@
 ==========================================================================
 LIMPIEZA DEL DATASET INMOBILIARIO
 ==========================================================================
-Fecha        : 2026-10-29 16:51
+Fecha        : 2026-11-13 10:58
 Entrada      : data/raw/dataset_maestro.csv
 Tipo cambio  : 1,500 ARS/USD
 Outliers     : moderado
@@ -12,6 +12,7 @@ Filas leidas : 14,867
     venta -> alquiler (monto y titulo de alquiler)           1 filas
     moneda USD -> ARS (monto solo coherente en pesos)        4 filas
     superficie anulada por inconsistente                     1 filas
+    precio publicado -> total (contado + financiado)         2 filas
 
 --- PASO 2: Filtrado a inmuebles de vivienda individual -----------------------
     tipos excluidos:
@@ -62,8 +63,8 @@ Filas leidas : 14,867
 
     Deteccion matematica comparada — venta_m2_usd (n=10,969)
     criterio                       inf         sup  marcados       %
-    z-score (3s)               -510.56    4,649.69       100   0.91%
-    z robusto (3.5 MAD)        -766.72    4,747.98        93   0.85%
+    z-score (3s)               -510.23    4,649.60       100   0.91%
+    z robusto (3.5 MAD)        -766.84    4,748.16        93   0.85%
     IQR (Tukey 1.5)            -125.89    4,143.71       214   1.95%
     percentil 1/99              546.51    4,583.63       220   2.01%
 
@@ -173,7 +174,7 @@ barrio                n_alq  n_vta   alq_usd   venta_usd   rent %
 san nicolas              46    225       463      85,000     6.54
 balvanera                45    528       400      84,950     5.65
 san cristobal            26    227       413      88,000     5.64
-villa crespo             39    378       533     119,250     5.37
+villa crespo             39    378       533     119,750     5.34
 almagro                  64    537       483     119,000     4.87
 palermo                 254   1102       650     163,250     4.78
 villa urquiza            59    438       593     159,450     4.47

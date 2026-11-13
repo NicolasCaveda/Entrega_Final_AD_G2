@@ -1,0 +1,70 @@
+
+============================================================================
+APTOS PARA CREDITO Y PRIMA POR ESPACIOS VERDES
+============================================================================
+Fecha: 2026-11-13 11:14
+
+============================================================================
+1. AVISOS APTOS PARA CREDITO HIPOTECARIO
+============================================================================
+Proporcion de avisos que declaran ser aptos para credito (un piso: no decirlo no es no serlo)
+    ventas                              2,590 de 10,749   24.1%
+    ventas en el presupuesto            1,540 de  6,062   25.4%
+    universo de la decision             1,054 de  3,766   28.0%
+    P1: pasan sin costos de entrada        32 de     93   34.4%
+    P1: pasan con costos de entrada         4 de     12   33.3%
+
+Por tipo de propiedad (ventas):
+    casa            17.3%  (683 avisos)
+    departamento    24.9%  (8,658 avisos)
+    ph              22.6%  (1,408 avisos)
+
+Precio del m2, aptas contra no aptas en la misma celda barrio x tramo (149 celdas):
+    diferencia mediana ponderada: -5.2%   Van Elteren p bilateral = 2.4e-12
+
+============================================================================
+2. PRIMA POR CERCANIA A ESPACIOS VERDES
+============================================================================
+Base: 10,743 ventas con precio del m2 y coordenadas. Plaza: desde 1,000 m2; parque: desde una
+hectarea; sin canteros centrales (espacial.py).
+Modelo: log(m2) = barrio + controles del inmueble + distancia a la red + tramos de distancia
+al verde. Efecto contra el tramo MAS LEJANO, IC 95% con errores agrupados por barrio.
+
+plaza (barrio + controles):
+           0-150 m   2,536 avisos    +1.7%  IC 95% [-1.3%, +4.7%]  p = 0.27
+         150-300 m   3,248 avisos    +1.4%  IC 95% [-1.0%, +3.8%]  p = 0.26
+         300-500 m   2,922 avisos    -0.7%  IC 95% [-2.6%, +1.1%]  p = 0.43
+            500+ m   2,037 avisos    +0.0%
+
+plaza (barrio + controles, deptos):
+           0-150 m   2,085 avisos    +2.0%  IC 95% [-1.4%, +5.5%]  p = 0.24
+         150-300 m   2,638 avisos    +1.5%  IC 95% [-1.1%, +4.2%]  p = 0.25
+         300-500 m   2,329 avisos    -0.4%  IC 95% [-2.3%, +1.6%]  p = 0.7
+            500+ m   1,600 avisos    +0.0%
+
+parque (barrio + controles):
+           0-300 m   2,033 avisos    +4.5%  IC 95% [-0.2%, +9.6%]  p = 0.063
+         300-600 m   2,576 avisos    +3.2%  IC 95% [-0.2%, +6.7%]  p = 0.066
+       600-1,000 m   3,228 avisos    +1.7%  IC 95% [-0.4%, +3.8%]  p = 0.11
+          1,000+ m   2,906 avisos    +0.0%
+
+parque (barrio + controles, deptos):
+           0-300 m   1,654 avisos    +5.9%  IC 95% [+0.5%, +11.7%]  p = 0.033
+         300-600 m   2,089 avisos    +4.7%  IC 95% [+0.7%, +8.8%]  p = 0.022
+       600-1,000 m   2,653 avisos    +2.5%  IC 95% [-0.3%, +5.3%]  p = 0.08
+          1,000+ m   2,256 avisos    +0.0%
+
+============================================================================
+LECTURA
+============================================================================
+- Declaran ser aptos para credito 24% de las ventas y 28% del universo de la decision.
+- Contra sus comparables de la misma celda, el m2 de las aptas cotiza -5.2% (Van Elteren, p bilateral = 2.4e-12).
+  Es una asociacion: la diferencia puede venir de lo que la celda no controla (antiguedad, estado).
+- Plaza, todas: a 0-150 m el m2 cotiza +1.7% contra el tramo mas lejano, IC 95% [-1.3%, +4.7%]; el intervalo incluye el cero: con estos datos no se distingue de cero, lo que no es lo mismo que no tener efecto.
+- Plaza, departamentos: a 0-150 m el m2 cotiza +2.0% contra el tramo mas lejano, IC 95% [-1.4%, +5.5%]; el intervalo incluye el cero: con estos datos no se distingue de cero, lo que no es lo mismo que no tener efecto.
+- Parque, todas: a 0-300 m el m2 cotiza +4.5% contra el tramo mas lejano, IC 95% [-0.2%, +9.6%]; el intervalo incluye el cero: con estos datos no se distingue de cero, lo que no es lo mismo que no tener efecto.
+- Parque, departamentos: a 0-300 m el m2 cotiza +5.9% contra el tramo mas lejano, IC 95% [+0.5%, +11.7%]; el intervalo no incluye el cero.
+  Son asociaciones entre avisos del mismo barrio, no efectos causales, y se prueban varios tramos sin
+  corregir por comparaciones multiples: un intervalo que apenas excluye el cero es evidencia debil.
+
+Archivo: data/processed/credito_verdes.csv (18 filas)

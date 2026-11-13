@@ -156,6 +156,7 @@ const M = DATOS.modelo;
 const P = DATOS.parametros;
 const S = P.supuestos;
 const [PISO, TECHO] = S.retorno_minimo_pct;
+const VARA = S.retorno_minimo_vara_pct;
 const C = { principal: "#2F68B0", alerta: "#C08A1E", contexto: "#778472", banda: "#FFD275", grilla: "#E3E7EE", tinta: "#30343F" };
 
 // --- Formato argentino ------------------------------------------------------
@@ -287,7 +288,7 @@ function renderAlquiler(prop, r) {
     <p class="sub">${esc(nombre(prop.barrio))} · ${esc(prop.tipo_familia)} de ${num(prop.sup_total_m2)} m² · basado en ${r.n_alq_barrio} alquileres del barrio</p>
     <div class="grande">${usd(r.alquiler_est_usd_mes)} <small>por mes · USD ${num(r.alquiler_est_m2, 1)} por m²</small></div>
     <p style="margin:6px 0 0">Banda p10–p90: <b>${usd(r.alquiler_p10_usd_mes)} a ${usd(r.alquiler_p90_usd_mes)}</b>
-      <span class="ayuda" style="display:inline"> · fuera de muestra, 8 de cada 10 alquileres reales caen en su banda</span></p>`;
+      <span class="ayuda" style="display:inline"> · cobertura fuera de muestra sobre avisos de alquiler de RE/MAX: ${num(P.origen.cobertura_banda_calibrada * 100, 0)}%</span></p>`;
   if (Number.isFinite(dif)) {
     h += `<p class="ayuda">Con el alquiler mediano por m² del barrio daría ${usd(r.referencia_barrio_usd_mes)}; el modelo estima ${signo(dif)}% por las características de la propiedad.</p>`;
   }
@@ -299,7 +300,7 @@ function renderAlquiler(prop, r) {
 }
 
 function renderDecision(prop, r) {
-  const umbral = TECHO + S.margen_liquidez_pct;
+  const umbral = VARA + S.margen_liquidez_pct;
   const faltan = [];
   if (!r.en_presupuesto) faltan.push(`está fuera del presupuesto del inversor (${usd(S.presupuesto_usd[0])} a ${usd(S.presupuesto_usd[1])})`);
   if (!r.estimacion_confiable) faltan.push("su barrio tiene pocos alquileres");
@@ -310,7 +311,7 @@ function renderDecision(prop, r) {
   } else if (r.p1_comprar) {
     p1 = `<span class="sello pasa">PASA · A VERIFICAR</span>La neta pesimista (${pct(r.neta_min_pct)}) supera ${pct(umbral)}. No es una recomendación de compra: las que pasan suelen ser más baratas que su celda por algo que el aviso no dice. Con costos de entrada ${r.p1_comprar_con_entrada ? "también pasa" : "ya no pasa"} (TIR pesimista ${pct(r.tir_5a_min_pct)}).`;
   } else {
-    p1 = `<span class="sello no">NO PASA</span>La neta pesimista (${pct(r.neta_min_pct)}) no supera el techo de la banda (${pct(umbral)}).`;
+    p1 = `<span class="sello no">NO PASA</span>La neta pesimista (${pct(r.neta_min_pct)}) no supera la TIR de las ON a ${S.horizonte_anios} años (${pct(umbral)}).`;
   }
   const nU = num(P.mercado.n_universo);
   const p2 = faltan.length ? `<span class="vacio">Solo se compara dentro del universo de la decisión.</span>`
@@ -424,11 +425,11 @@ document.getElementById("restablecer").addEventListener("click", () => { cargarD
 
 const o = P.origen;
 document.getElementById("origen").textContent =
-  `Modelo de alquiler de la 3ra pre-entrega · entrenado el ${o.modelo_entrenado.slice(0, 10)} con ${num(o.n_alquileres_entrenamiento)} alquileres · ` +
-  `vara: banda de retorno mínimo de ${pct(PISO)} a ${pct(TECHO)}`;
+  `Modelo de alquiler entrenado el ${o.modelo_entrenado.slice(0, 10)} con ${num(o.n_alquileres_entrenamiento)} alquileres · ` +
+  `vara: TIR de las ON en dólares a ${S.horizonte_anios} años, ${pct(VARA)} (banda ${pct(PISO)} a ${pct(TECHO)}; precios del ${esc(S.curva_on_fecha)})`;
 document.getElementById("pie").innerHTML =
   `Datos: avisos de RE/MAX relevados en agosto de 2026; tablas de IDECBA, Colegio de Escribanos e Inside Airbnb; Ley Tarifaria 6927. ` +
-  `Parámetros de la Entrega 3 (commit ${esc(o.commit || "desconocido")}), generados el ${esc(o.generado.slice(0, 10))}. ` +
+  `Parámetros del commit ${esc(o.commit || "desconocido")}, generados el ${esc(o.generado.slice(0, 10))}. ` +
   `Esto es un prototipo analítico, no un tasador: las cifras son estimaciones con su banda de error.`;
 render();
 </script>

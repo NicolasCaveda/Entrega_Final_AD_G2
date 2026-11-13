@@ -1,0 +1,30 @@
+id_aviso,accion,motivo
+e3c5728b-7677-4126-934b-4add4d0ca062,excluir,"Uso mixto: el piso está dividido en vivienda y sector profesional."
+ce975beb-6b9b-420e-bc47-8c32efe21ff1,excluir,"Se ofrece como departamento u oficina en el microcentro, con kitchinette y baños de oficina."
+85e6c8c4-c0ee-4c94-af82-ff34fc686335,excluir,"Actualmente se usa como oficina."
+c3499091-18f3-4ce9-a024-be1932478669,excluir,"Es una oficina: cocina, fichero y despachos."
+ce2bf17d-3922-490a-a97e-3eb7e2b33820,excluir,"Es una oficina divisible."
+736f22e0-df64-41c8-80d0-1e31cd0a8eec,excluir,"Hoy es un consultorio odontológico y se vende con renta."
+ae3eef8c-11f1-4ab8-8600-2751fdff22ba,excluir,"Uso mixto: incluye un local comercial a la calle."
+bac44f63-0346-490f-9a71-66267fa7ebb6,alertar,"La superficie incluye un altillo de 1,64 m de altura."
+4157876a-bad3-4b28-b864-b7e035ee9ad6,alertar,"El aviso dice que necesita mejoras y no está marcada a reciclar: la TIR no descuenta obra."
+679ef709-6afd-417b-af07-3b3e9dd48ed4,alertar,"Cocina y lavadero requieren una modernización completa y no está marcada a reciclar: la TIR no descuenta obra."
+d562e4b7-2ea1-4c06-8b62-71c55ffa8f0d,alertar,"El aviso dice que es para actualizar y no está marcada a reciclar: la TIR no descuenta obra."
+7ee8eca0-039f-4cb9-8c7c-d664ae3c140a,alertar,"El aviso dice que es para actualizar y no está marcada a reciclar: la TIR no descuenta obra."
+f65b3388-bda6-4290-8329-661a530824c3,alertar,"El aviso dice que necesita mejoras y no está marcada a reciclar: la TIR no descuenta obra."
+93852872-7b51-4851-80bc-e4331e6fb877,alertar,"Se puede vender con inquilino hasta mayo de 2027: el alquiler de ese contrato no es el estimado."
+ce7e8493-29ef-4bd5-9903-d783b5cdc811,alertar,"Se vende con renta: el alquiler del contrato vigente no es el estimado."
+59253ac7-5e69-4333-b446-1c794257c252,alertar,"Son dos departamentos de 2 ambientes que se venden juntos: el modelo estima uno solo de 89 m²."
+65c4c20f-42af-4ed1-b034-da027e3857d4,alertar,"La cochera se vende aparte (USD 30.000) y el modelo la cuenta en el alquiler."
+a8fa9df0-d80b-44fe-9d04-bf7c6fef68a9,alertar,"En el plano figura como local; por reglamento es apto vivienda."
+901c7cdc-a45c-4891-bff4-32d2886ce27c,alertar,"Se promociona como propiedad profesional u oficina corporativa."
+d74dee1a-d0a1-4585-a803-627de219bee2,alertar,"Se promociona para oficinas, consultorios o centro de estética."
+8441a01e-c1de-44ca-83a8-bb01c4502d79,alertar,"Se promociona como vivienda, consultorio u oficina."
+60e47086-1639-48ba-8294-2fc66d3d660c,alertar,"Se promociona para uso profesional o comercial."
+bed95c11-46bd-4529-bb23-f2a8dc37ef47,alertar,"Se promociona como vivienda o consultorio; planta baja con sótano."
+79182f77-b88d-4ec3-bc91-26aacc23a923,excluir,Se ofrece como oficina: departamento convertido en estudio.
+742671f5-4f97-48db-ad82-2a35c4c8f41b,alertar,Tenía contrato de alquiler vigente hasta octubre de 2026: confirmar que esté desocupado.
+b598029b-fde4-4f6c-a358-df6badace303,alertar,Se vende con renta: el alquiler del contrato vigente no es el estimado.
+f7f54e63-61ba-4a36-8f9f-c091e11b316b,alertar,Se vende con renta: el alquiler del contrato vigente no es el estimado.
+6f1e93af-4a3b-4f18-8c4d-a7e19ad54cb1,alertar,"Posible aviso duplicado: mismo texto, superficie y precio que otro publicado en Almagro."
+7e342099-93a5-45fd-9b73-aa27e310248e,alertar,"Posible aviso duplicado: mismo texto, superficie y precio que otro publicado en Palermo."

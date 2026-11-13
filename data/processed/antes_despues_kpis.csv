@@ -1,4 +1,4 @@
 ﻿escenario,mediana_pct,barrios_sobre_piso,barrios,top5
-"antes: neta, ABL plano",5.67,1,constitucion,constitucion; san cristobal; san telmo; balvanera; liniers
-"neta, ABL segmentado",5.65,1,constitucion,constitucion; san cristobal; san telmo; liniers; balvanera
-"TIR 5a, ABL segm. + entrada",4.27,0,,constitucion; san telmo; san cristobal; liniers; san nicolas
+"antes: neta, ABL plano",5.67,13,constitucion; san cristobal; san telmo; balvanera; liniers; san nicolas; barracas; monserrat; villa luro; flores; parque chacabuco; floresta; villa santa rita,constitucion; san cristobal; san telmo; balvanera; liniers
+"neta, ABL segmentado",5.65,13,constitucion; san cristobal; san telmo; liniers; balvanera; barracas; san nicolas; monserrat; flores; villa luro; floresta; parque chacabuco; villa santa rita,constitucion; san cristobal; san telmo; liniers; balvanera
+"TIR 5a, ABL segm. + entrada",4.27,1,constitucion,constitucion; san telmo; san cristobal; liniers; san nicolas

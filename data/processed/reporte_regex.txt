@@ -2,12 +2,12 @@
 ==========================================================================
 INGENIERIA DE VARIABLES DESDE TEXTO LIBRE
 ==========================================================================
-Fecha        : 2026-10-29 16:51
+Fecha        : 2026-11-13 10:59
 Filas        : 12,097
 Largo del texto por aviso: mediana 1,599 caracteres, minimo 37, maximo 13,911
 Avisos con texto insuficiente (<20 caracteres): 0
 
-Variables dicotomicas generadas por RegEx: 35
+Variables dicotomicas generadas por RegEx: 36
 Variables de estructura extraidas del texto: 5
     piso_txt recuperado en 39.2% de los avisos (la columna `piso` del crudo tenia 0.3%)
     disposicion declarada en 53.7% de los avisos
@@ -18,7 +18,7 @@ AUDITORIA: SUBCADENA (1ra entrega) CONTRA REGEX
 ==========================================================================
 atributo               viejo %   nuevo %  delta pp    0->1    1->0
 ------------------------------------------------------------------
-a_reciclar                4.3%      4.3%      +0.0       8       7
+a_reciclar                4.3%      4.3%      +0.0       9       7
 amenities                40.4%     41.5%      +1.1    1250    1113
 amoblado                 11.3%      7.7%      -3.6     423     864
 apto_credito             22.6%     21.5%      -1.1      14     149
@@ -91,16 +91,17 @@ apto_profesional             11.9%    1441
 laundry                      11.9%    1437
 dependencia                  11.2%    1356
 estrenar                     11.0%    1333
+financiacion                 10.1%    1219
 seguridad                     9.6%    1162
 gimnasio                      9.0%    1094
-financiacion                  8.4%    1017
 amoblado                      7.7%     930
+en_pozo                       6.7%     814
 sauna                         5.6%     672
-a_reciclar                    4.3%     523
-en_pozo                       4.0%     489
+a_reciclar                    4.3%     524
 renta_actual                  2.4%     293
 coworking                     2.0%     244
 apto_mascotas                 1.6%     190
+uso_no_residencial            1.1%     135
 dueno_directo                 0.0%       5
 
 Variables con prevalencia extrema (<1% o >99%): sin poder
@@ -115,6 +116,6 @@ para separar 'el RegEx falla' de 'el atributo no existe en la fuente'.
     de particulares. Es una limitacion de la fuente, no del parseo.
 
 Filas    : 12,097
-Columnas : 87
+Columnas : 88
 Guardado : data/processed\dataset_variables.csv
 Reporte  : data/processed\reporte_regex.txt

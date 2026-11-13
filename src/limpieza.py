@@ -98,6 +98,17 @@ CORREGIR_A_ARS = [
 # Este ademas tiene la superficie mal cargada (694 m2 para un monoambiente).
 SUPERFICIE_SOSPECHOSA = ["78f7fd56-e24e-4f56-a7c9-56ca55523212"]
 
+# Ventas cuyo precio publicado es solo la parte al contado: la descripcion
+# dice el total. Se encontraron leyendo a mano los primeros puestos de las
+# listas de compra; el resto de los casos los marca la variable financiacion
+# (variables.py) y la decision los deja afuera (decision.py).
+CORREGIR_PRECIO_TOTAL_USD = {
+    # "US$ 85000 + US$ 65000 financiado por Hipoteca Privada"
+    "5d0ef847-ac5f-4787-8112-95f520eb4c36": 85_000 + 65_000,
+    # "91.000 USD MAS 13 CUOTAS DE USD 3500"
+    "a92194a4-0b94-42d3-8e36-e25b71fbe730": 91_000 + 13 * 3_500,
+}
+
 # --- Limites de sanidad (imposibles fisicos, no criterios estadisticos) ---
 LIMITES = {
     "sup_min": 10,        # menos de 10 m2 no es una vivienda
@@ -194,8 +205,13 @@ def paso_1_correcciones(df: pd.DataFrame, rep: Reporte) -> pd.DataFrame:
     df.loc[m, ["sup_total_m2", "sup_cubierta_m2"]] = np.nan
     rep(f"    superficie anulada por inconsistente                {int(m.sum()):>6} filas")
 
+    m = df["id_aviso"].isin(CORREGIR_PRECIO_TOTAL_USD) & (df["precio_moneda"] == "USD")
+    df.loc[m, "precio_valor"] = df.loc[m, "id_aviso"].map(CORREGIR_PRECIO_TOTAL_USD)
+    rep(f"    precio publicado -> total (contado + financiado)    {int(m.sum()):>6} filas")
+
     # El precio_m2 de las filas corregidas quedo mal: se recalcula despues.
-    tocadas = df["id_aviso"].isin(CORREGIR_A_ALQUILER + CORREGIR_A_ARS + SUPERFICIE_SOSPECHOSA)
+    tocadas = df["id_aviso"].isin(CORREGIR_A_ALQUILER + CORREGIR_A_ARS + SUPERFICIE_SOSPECHOSA
+                                  + list(CORREGIR_PRECIO_TOTAL_USD))
     df.loc[tocadas, "precio_m2"] = np.nan
     return df
 

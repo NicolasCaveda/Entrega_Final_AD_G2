@@ -141,6 +141,46 @@ check("a reciclar", dummy("propiedad a reciclar", "a_reciclar"), 1)
 check("a reciclar no marca reciclado", dummy("propiedad a reciclar", "reciclado"), 0)
 check("reciclado no marca a_reciclar", dummy("bano reciclado a nuevo", "a_reciclar"), 0)
 check("a demoler cuenta como a reciclar", dummy("lote a demoler", "a_reciclar"), 1)
+# Regresion: el titulo real de un aviso que llego primero a la lista de compra.
+check("la abreviatura 'A refac.' cuenta como a reciclar",
+      dummy("Venta 4 amb + dep V. Crespo. A refac. Financiación", "a_reciclar"), 1)
+check("NEG: 'refaccionado' no es 'a refac'", dummy("bano refaccionado", "a_reciclar"), 0)
+check("NEG: 'para refacciones menores' no es a reciclar",
+      dummy("presupuesto para refacciones menores", "a_reciclar"), 0)
+
+
+# ==========================================================================
+# 6b. PRECIO QUE NO ES EL TOTAL: pozo y financiacion
+# ==========================================================================
+# Regresiones con el texto de avisos reales que llegaron a las listas de
+# compra con en_pozo = 0 o financiacion = 0.
+
+check("financiacion: 'USD 85000 + USD 65000 financiado por Hipoteca Privada'",
+      dummy("US$ 85000 + US$ 65000 financiado por Hipoteca Privada", "financiacion"), 1)
+check("financiacion: 'MAS 13 CUOTAS DE USD 3500'",
+      dummy("91.000 USD MAS 13 CUOTAS DE USD 3500", "financiacion"), 1)
+check("financiacion: 'USD 91.000 + CTAS' en el titulo",
+      dummy("MONOAMBIENTE C/ PATIO A ESTRENAR USD 91.000 + CTAS", "financiacion"), 1)
+check("financiacion: anticipo y cuotas", dummy("forma de pago 40% anticipo y saldo", "financiacion"), 1)
+check("NEG financiacion: la publicidad de un credito bancario",
+      dummy("podes hacer la simulacion de las cuotas y calcular tu prestamo", "financiacion"), 0)
+check("NEG financiacion: credito de terceros sobre el precio total",
+      dummy("con lendar tenes hasta el 30% de la propiedad financiada", "financiacion"), 0)
+check("pozo: 'POZO' solo en el titulo",
+      dummy("VENTA DEPTO 2 AMB CON PATIO POZO VILLA SANTA RITA", "en_pozo"), 1)
+check("pozo: fecha estimada de entrega", dummy("FECHA ESTIMADA DE ENTREA DICIEMBRE 2027, fecha estimada de entrega", "en_pozo"), 1)
+check("pozo: 'entrega en finales del 2027'", dummy("ENTREGA EN FINALES DEL 2027", "en_pozo"), 1)
+check("NEG pozo: el pozo de aire y luz de un edificio viejo",
+      dummy("impermeabilizacion del pozo de aire y luz", "en_pozo"), 0)
+check("NEG pozo: la calle Combate de los Pozos", dummy("Av. San Juan y Combate de los Pozos", "en_pozo"), 0)
+check("NEG pozo: una entrega de este anio puede estar terminada", dummy("entrega junio 2026", "en_pozo"), 0)
+
+check("uso no residencial: 'VENTA DEPARTAMENTO / OFICINA'",
+      dummy("VENTA DEPARTAMENTO / OFICINA - RECONQUISTA Y LAVALLE", "uso_no_residencial"), 1)
+check("uso no residencial: dividido con un sector profesional",
+      dummy("una parte como vivienda familiar y otro como Sector Profesional", "uso_no_residencial"), 1)
+check("NEG uso no residencial: 'apto profesional' es un permiso, no un uso",
+      dummy("Apto Crédito. Apto profesional.", "uso_no_residencial"), 0)
 
 
 # ==========================================================================

@@ -1,23 +1,29 @@
-﻿parametro,vacancia,gastos_sin_abl,abl,entrada,umbral,margen,n_p1,n_p1_con_entrada,jaccard_p1_vs_base,n_frontera_p2,jaccard_frontera_vs_base,pares_distinguibles_pct,neta_min_mediana
-base,5.88,10.24,segmentado,base,7.6,0.0,18,4,1.0,140,1.0,7.28,4.12
-vacancia,4.0,10.24,segmentado,base,7.6,0.0,23,4,0.783,140,1.0,7.28,4.2
-vacancia,6.0,10.24,segmentado,base,7.6,0.0,18,4,1.0,140,1.0,7.28,4.11
-vacancia,8.0,10.24,segmentado,base,7.6,0.0,16,4,0.889,140,1.0,7.28,4.03
-vacancia,10.0,10.24,segmentado,base,7.6,0.0,12,3,0.667,140,1.0,7.28,3.94
-vacancia,12.0,10.24,segmentado,base,7.6,0.0,10,3,0.556,140,1.0,7.28,3.85
-gastos sin ABL,5.88,8.24,segmentado,base,7.6,0.0,23,4,0.783,138,0.986,7.29,4.22
-gastos sin ABL,5.88,10.24,segmentado,base,7.6,0.0,18,4,1.0,140,1.0,7.28,4.12
-gastos sin ABL,5.88,12.24,segmentado,base,7.6,0.0,16,3,0.889,140,1.0,7.26,4.02
-ABL,5.88,10.24,plano,base,7.6,0.0,20,4,0.9,92,0.657,8.14,4.19
-ABL,5.88,10.24,segmentado,base,7.6,0.0,18,4,1.0,140,1.0,7.28,4.12
-ABL,5.88,10.24,segmentado_tope,base,7.6,0.0,15,4,0.833,128,0.914,7.0,4.02
-costos de entrada,5.88,10.24,segmentado,sin,7.6,0.0,18,24,1.0,140,1.0,7.28,4.12
-costos de entrada,5.88,10.24,segmentado,base,7.6,0.0,18,4,1.0,140,1.0,7.28,4.12
-costos de entrada,5.88,10.24,segmentado,alto,7.6,0.0,18,3,1.0,140,1.0,7.28,4.12
-banda de retorno,5.88,10.24,segmentado,base,7.1,0.0,33,5,0.545,140,1.0,7.28,4.12
-banda de retorno,5.88,10.24,segmentado,base,7.6,0.0,18,4,1.0,140,1.0,7.28,4.12
-margen por liquidez,5.88,10.24,segmentado,base,7.6,0.0,18,4,1.0,140,1.0,7.28,4.12
-margen por liquidez,5.88,10.24,segmentado,base,7.6,0.5,10,3,0.556,140,1.0,7.28,4.12
-margen por liquidez,5.88,10.24,segmentado,base,7.6,1.0,6,2,0.333,140,1.0,7.28,4.12
-extremo favorable,4.0,8.24,plano,sin,7.1,0.0,51,57,0.353,92,0.657,8.14,4.38
-extremo desfavorable,12.0,12.24,segmentado_tope,alto,7.6,1.0,3,0,0.167,129,0.921,6.98,3.67
+﻿parametro,vacancia,gastos_sin_abl,abl,entrada,refaccion,suba,horizonte,umbral,margen,n_p1,n_p1_con_entrada,jaccard_p1_vs_base,n_frontera_p2,jaccard_frontera_vs_base,pares_distinguibles_pct,neta_min_mediana
+base,5.88,10.24,segmentado,base,base,reciclado,5,6.26,0.0,93,12,1.0,396,1.0,7.24,4.13
+vacancia,4.0,10.24,segmentado,base,base,reciclado,5,6.26,0.0,111,15,0.838,396,1.0,7.24,4.22
+vacancia,6.0,10.24,segmentado,base,base,reciclado,5,6.26,0.0,93,12,1.0,396,1.0,7.24,4.13
+vacancia,8.0,10.24,segmentado,base,base,reciclado,5,6.26,0.0,81,10,0.871,396,1.0,7.24,4.04
+vacancia,10.0,10.24,segmentado,base,base,reciclado,5,6.26,0.0,61,7,0.656,396,1.0,7.24,3.95
+vacancia,12.0,10.24,segmentado,base,base,reciclado,5,6.26,0.0,48,5,0.516,396,1.0,7.24,3.86
+gastos sin ABL,5.88,8.24,segmentado,base,base,reciclado,5,6.26,0.0,116,16,0.802,396,1.0,7.25,4.23
+gastos sin ABL,5.88,10.24,segmentado,base,base,reciclado,5,6.26,0.0,93,12,1.0,396,1.0,7.24,4.13
+gastos sin ABL,5.88,12.24,segmentado,base,base,reciclado,5,6.26,0.0,78,10,0.839,396,1.0,7.22,4.04
+ABL,5.88,10.24,plano,base,base,reciclado,5,6.26,0.0,106,12,0.877,368,0.924,8.1,4.22
+ABL,5.88,10.24,segmentado,base,base,reciclado,5,6.26,0.0,93,12,1.0,396,1.0,7.24,4.13
+ABL,5.88,10.24,segmentado_tope,base,base,reciclado,5,6.26,0.0,81,10,0.871,399,0.978,6.96,4.03
+costos de entrada,5.88,10.24,segmentado,sin,base,reciclado,5,6.26,0.0,93,83,1.0,396,1.0,7.24,4.13
+costos de entrada,5.88,10.24,segmentado,base,base,reciclado,5,6.26,0.0,93,12,1.0,396,1.0,7.24,4.13
+costos de entrada,5.88,10.24,segmentado,alto,base,reciclado,5,6.26,0.0,93,5,1.0,396,1.0,7.24,4.13
+refaccion,5.88,10.24,segmentado,base,base,reciclado,5,6.26,0.0,93,12,1.0,396,1.0,7.24,4.13
+refaccion,5.88,10.24,segmentado,base,alto,reciclado,5,6.26,0.0,93,12,1.0,396,1.0,7.24,4.13
+suba por refaccion,5.88,10.24,segmentado,base,base,sin,5,6.26,0.0,93,12,1.0,396,1.0,7.24,4.13
+suba por refaccion,5.88,10.24,segmentado,base,base,reciclado,5,6.26,0.0,93,12,1.0,396,1.0,7.24,4.13
+suba por refaccion,5.88,10.24,segmentado,base,base,modelo,5,6.26,0.0,93,12,1.0,396,1.0,7.24,4.13
+banda de retorno,5.88,10.24,segmentado,base,base,reciclado,5,6.13,0.0,115,14,0.809,396,1.0,7.24,4.13
+banda de retorno,5.88,10.24,segmentado,base,base,reciclado,5,6.53,0.0,62,7,0.667,396,1.0,7.24,4.13
+horizonte,5.88,10.24,segmentado,base,base,reciclado,3,5.23,0.0,474,17,0.196,396,1.0,7.24,4.13
+margen por liquidez,5.88,10.24,segmentado,base,base,reciclado,5,6.26,0.0,93,12,1.0,396,1.0,7.24,4.13
+margen por liquidez,5.88,10.24,segmentado,base,base,reciclado,5,6.26,0.5,44,5,0.473,396,1.0,7.24,4.13
+margen por liquidez,5.88,10.24,segmentado,base,base,reciclado,5,6.26,1.0,23,2,0.247,396,1.0,7.24,4.13
+extremo favorable,4.0,8.24,plano,sin,base,modelo,5,6.13,0.0,198,185,0.47,368,0.924,8.1,4.4
+extremo desfavorable,12.0,12.24,segmentado_tope,alto,alto,sin,5,6.53,1.0,3,0,0.032,400,0.975,6.94,3.68

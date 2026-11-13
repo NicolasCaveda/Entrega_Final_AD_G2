@@ -186,8 +186,9 @@ const Motor = (() => {
     const b = predecirLog(M.p90, prop) + d;
     r.alquiler_p10_usd_mes = redondear(Math.exp(Math.min(a, b)), 2);
     r.alquiler_p90_usd_mes = redondear(Math.exp(Math.max(a, b)), 2);
+    // Refaccionada: el estimado por el factor de suba del supuesto (kpis.py)
     r.alquiler_post_refaccion_usd_mes = prop.a_reciclar === 1
-      ? redondear(Math.exp(predecirLog(M.central, { ...prop, a_reciclar: 0, reciclado: 1 })) * M.smearing, 2)
+      ? redondear(r.alquiler_est_usd_mes * P.supuestos.factor_suba_refaccion, 2)
       : NaN;
     r.alquiler_est_m2 = redondear(r.alquiler_est_usd_mes / prop.sup_total_m2, 2);
     const refM2 = P.alquiler_m2_barrio[prop.barrio];
@@ -238,7 +239,7 @@ const Motor = (() => {
     r.tir_5a_min_pct = redondear(tir(nMin, inicial, Sp.horizonte_anios), 2);
     r.en_presupuesto = venta >= Sp.presupuesto_usd[0] && venta <= Sp.presupuesto_usd[1];
     r.universo_decision = r.estimacion_confiable && r.en_presupuesto && r.en_soporte_modelo;
-    const umbral = Sp.retorno_minimo_pct[1] + Sp.margen_liquidez_pct;
+    const umbral = Sp.retorno_minimo_vara_pct + Sp.margen_liquidez_pct;
     r.p1_comprar = r.universo_decision && r.neta_min_pct > umbral;
     r.p1_comprar_con_entrada = r.universo_decision && r.tir_5a_min_pct > umbral;
     r.p2_la_superan = cuantosMayores(P.mercado.universo_neta_min_pct, r.neta_max_pct);
