@@ -33,6 +33,6 @@ ipykernel==6.29.5
 
 # ---------------------------------------------------------------------------
 # NO se incluyen las dependencias de scraping (requests, curl_cffi, Brotli,
-# zstandard, beautifulsoup4). La extraccion es materia de la version inicial y su
-# repositorio; este proyecto parte de data/raw/dataset_maestro.csv, que se versiona.
+# zstandard, beautifulsoup4). La extraccion se hizo una sola vez, con un scraper
+# aparte; este proyecto parte de data/raw/dataset_maestro.csv, que se versiona.
 # ---------------------------------------------------------------------------
