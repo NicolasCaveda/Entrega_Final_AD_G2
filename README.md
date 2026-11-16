@@ -12,7 +12,7 @@ renta fija en dólares al mismo plazo. El trabajo responde tres decisiones: si c
 
 | Para el inversor | Dónde |
 |---|---|
-| **Tablero**: ¿conviene el mercado, dónde y qué mirar? | Versión publicada: *se completa al publicar la app desde este repositorio* ([cómo publicarlo](#publicarlo-en-streamlit-community-cloud)). Localmente: [El tablero](#el-tablero) |
+| **Tablero**: ¿conviene el mercado, dónde y qué mirar? | <https://tablero-final-descriptiva.streamlit.app/> (si estuvo sin uso, tarda unos segundos en despertar). Capturas y ejecución local: [El tablero](#el-tablero) |
 | **Simulador**: ¿esta propiedad, a este precio? | [`simulador/simulador.html`](simulador/simulador.html): se descarga y se abre con doble clic |
 | **Informe de hallazgos**, con cada cifra calculada en vivo | [`informe/INFORME_HALLAZGOS.md`](informe/INFORME_HALLAZGOS.md) |
 
@@ -112,6 +112,13 @@ es una sola inmobiliaria, y cada rentabilidad es una banda. La barra lateral tie
 filtros (presupuesto, tipo, comuna, barrio, ambientes, superficie, antigüedad y métrica)
 y la vara de retorno, que es una referencia fija y no un filtro.
 
+**Por qué la primera pantalla no muestra la misma mediana que el informe.** El tablero
+abre filtrado al caso del inversor: departamentos dentro de su presupuesto. El informe y
+los hallazgos de este README resumen todas las ventas con estimación confiable. Son la
+misma métrica sobre dos poblaciones, y el encabezado del tablero dice siempre sobre
+cuántas propiedades se calcula; al quitar los filtros, el tablero reproduce las cifras del
+informe (lo verifica `tablero/test_tablero.py`).
+
 ### Capturas
 
 Las cinco pestañas con los filtros por defecto (departamentos dentro del presupuesto),
@@ -139,7 +146,8 @@ dataset versionado, así que no hace falta correr el pipeline antes.
 
 ### Publicarlo en Streamlit Community Cloud
 
-En <https://share.streamlit.io>, *Create app* desde este repositorio, rama `main`, con
+La versión publicada se actualiza sola con cada cambio en la rama `main`. Para publicar
+otra copia: en <https://share.streamlit.io>, *Create app* desde este repositorio, rama `main`, con
 **main file path** `tablero/app.py`. Community Cloud instala las dependencias del
 `requirements.txt` de la raíz y lee el tema de `.streamlit/config.toml`.
 
