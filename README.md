@@ -112,10 +112,11 @@ es una sola inmobiliaria, y cada rentabilidad es una banda. La barra lateral tie
 filtros (presupuesto, tipo, comuna, barrio, ambientes, superficie, antigüedad y métrica)
 y la vara de retorno, que es una referencia fija y no un filtro.
 
-**Por qué la primera pantalla no muestra la misma mediana que el informe.** El tablero
-abre filtrado al caso del inversor: departamentos dentro de su presupuesto. El informe y
-los hallazgos de este README resumen todas las ventas con estimación confiable. Son la
-misma métrica sobre dos poblaciones, y el encabezado del tablero dice siempre sobre
+**Por qué el tablero no abre con las mismas cifras que el informe.** El tablero abre
+filtrado al caso del inversor: departamentos dentro de su presupuesto. El informe y los
+hallazgos de este README resumen todas las ventas con estimación confiable. Por eso
+difieren la neta mediana, la TIR y la pendiente de H1: son las mismas métricas sobre dos
+poblaciones, y el encabezado del tablero dice siempre sobre
 cuántas propiedades se calcula; al quitar los filtros, el tablero reproduce las cifras del
 informe (lo verifica `tablero/test_tablero.py`).
 
