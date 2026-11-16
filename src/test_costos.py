@@ -160,7 +160,7 @@ v = df[df["rent_bruta_pct"].notna()]
 ok = v[v["estimacion_confiable"] == 1]
 
 antes = ad.loc[ad["escenario"].str.startswith("antes"), "mediana_pct"].iloc[0]
-check("el escenario ABL plano reproduce la neta mediana de la version anterior (5,67%)",
+check("el escenario ABL plano reproduce la neta mediana de referencia (5,67%)",
       abs(antes - 5.67) < 0.005, f"{antes}")
 check("ABL: positivo en toda venta con KPI", (v["abl_pct"] > 0).all() and (v["abl_ars_mes"] > 0).all())
 check("ABL: no supera el 1% anual del valor de mercado (art. 45)",

@@ -214,8 +214,8 @@ def entrenar_y_validar(alq: pd.DataFrame, rep: Reporte):
     # Importante: el error global esta calculado sobre la mezcla de ALQUILERES,
     # que son sistematicamente mas chicos que las ventas (mediana 45 vs 66 m2).
     # Como el error crece con el tamanio, el error global subestima el de las
-    # ventas. Hasta la version anterior la banda del KPI 4 salia de esta tabla; desde
-    # la 3ra sale de banda_cuantilica(), y esta queda como diagnostico.
+    # ventas. Por eso la banda del KPI 4 no sale de esta tabla sino de
+    # banda_cuantilica(), y esta queda como diagnostico.
     tmp = alq.copy()
     tmp["_err"] = err_rel
     tmp["_seg"] = pd.cut(tmp["sup_total_m2"], BINS_SUP, labels=LAB_SUP)

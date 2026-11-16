@@ -21,12 +21,12 @@ Salidas (en data/processed/):
     auditoria_calidad.csv   una fila por columna: nulos, naturaleza y decision
     reporte_limpieza.txt    log completo de la corrida
 
-QUE AGREGA ESTA VERSION
------------------------------------------
-Sobre la limpieza de la version inicial se suman dos exigencias:
+DOS EXIGENCIAS SOBRE UNA LIMPIEZA BASICA
+----------------------------------------
+Ademas de filtrar y normalizar, la limpieza cumple dos exigencias:
 
-  Paso 6  Deteccion de outliers COMPARADA. Antes se recortaba por percentil
-          sin mostrar alternativas. Ahora se calculan tambien z-score, z
+  Paso 6  Deteccion de outliers COMPARADA. No se recorta por percentil sin
+          mostrar alternativas: se calculan tambien z-score, z
           robusto (MAD) e IQR sobre la misma serie y se reporta cuantas filas
           marcaria cada uno, para que la eleccion sea defendible.
 
@@ -360,9 +360,8 @@ def paso_5_monedas(df: pd.DataFrame, tc: float, rep: Reporte) -> pd.DataFrame:
     df["precio_m2"] = (df["precio_valor"] / df["sup_total_m2"]).round(2)
 
     # --- Sanidad de expensas -------------------------------------------
-    # Hallazgo de la auditoria de la version anterior: `expensas_valor` tiene
-    # errores de tipeo que ningun criterio de precio detecta, porque la
-    # limpieza anterior solo vigilaba precio y superficie. El peor declara
+    # Hallazgo de la auditoria de calidad: `expensas_valor` tiene errores de
+    # tipeo que ningun criterio de precio o superficie detecta. El peor declara
     # 1,1e17 ARS de expensas mensuales para un 2 ambientes de 39 m2.
     #
     # El limite se fija por m2 y no en valor absoluto: unas expensas de USD

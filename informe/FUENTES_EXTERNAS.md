@@ -2,7 +2,7 @@
 
 **TP Integrador · 82.04 Analítica Descriptiva (ITBA) · Grupo 2**
 
-La versión inicial del análisis dependía de una sola fuente: la cartera de avisos de
+El análisis parte de una sola fuente primaria: la cartera de avisos de
 RE/MAX. Este catálogo documenta las fuentes que se sumaron para leerla contra el mercado
 y las que quedan planificadas. Cada una se describe con los mismos campos: qué variable
 aporta, cobertura geográfica, período, granularidad, cómo se une con RE/MAX, qué pregunta,

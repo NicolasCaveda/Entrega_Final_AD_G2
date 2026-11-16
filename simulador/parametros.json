@@ -1,8 +1,8 @@
 {
  "origen": {
-  "commit": "3ad3fce",
-  "generado": "2026-11-13T11:54:01",
-  "modelo_entrenado": "2026-11-13T11:52:13",
+  "commit": "7a67549",
+  "generado": "2026-11-16T16:24:02",
+  "modelo_entrenado": "2026-11-16T16:20:56",
   "hash_entrenamiento_sha256": "83f3a4a386b7ccc1f992db9300cf6c459a87443f80a32227acadd7d8f53ab0f8",
   "n_alquileres_entrenamiento": 1348,
   "cobertura_banda_calibrada": 0.816

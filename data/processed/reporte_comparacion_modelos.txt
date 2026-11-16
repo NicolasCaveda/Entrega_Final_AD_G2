@@ -2,7 +2,7 @@
 ============================================================================
 MODELO DE ALQUILER: COMPARACION FUERA DE MUESTRA
 ============================================================================
-Fecha: 2026-11-13 11:52
+Fecha: 2026-11-16 16:21
 Alquileres: 1,348. Esquema: KFold(5) en las semillas [42, 7, 2026].
     semilla 42: lista
     semilla 7: lista
@@ -39,7 +39,7 @@ porcentuales del alquiler, y ninguna mejora observada paga perder eso.
 BANDA DEL KPI 4: ANTES Y DESPUES
 ============================================================================
 Alquileres observados dentro de la banda, fuera de muestra:
-    version anterior, estimacion +- error mediano del tramo : 50.1%
+    simple, estimacion +- error mediano del tramo           : 50.1%
     vigente, percentiles 10 y 90 calibrados           : 81.6%  (objetivo 80%)
 La banda anterior era un rango del 50% por construccion: decia 'el alquiler esta entre
 estos dos valores' y acertaba la mitad de las veces. La nueva es mas ancha porque cubre

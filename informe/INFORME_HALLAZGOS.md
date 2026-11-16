@@ -2,7 +2,7 @@
 
 **TP Integrador · 82.04 Analítica Descriptiva (ITBA) · Grupo 2**
 
-*Generado por `py src/reporte.py` el 13-11-2026. Cada cifra de este documento se calcula al generarlo a partir de `data/processed/` y `data/external/`: si se reejecuta el pipeline, el informe se regenera con los números nuevos.*
+*Generado por `py src/reporte.py` el 16-11-2026. Cada cifra de este documento se calcula al generarlo a partir de `data/processed/` y `data/external/`: si se reejecuta el pipeline, el informe se regenera con los números nuevos.*
 
 **Cliente:** un pequeño inversor con ahorros en dólares que compra **una sola unidad** en CABA para alquilarla, con un presupuesto de USD 80.000 a USD 200.000 y un horizonte de 5 años. **Base:** 9.203 departamentos, casas y PH en venta de la cartera de RE/MAX, relevados entre el 16-08-2026 y el 17-08-2026, con alquiler estimado confiable. **Vara:** la TIR de las obligaciones negociables corporativas en dólares al plazo del inversor, **6,26%**: la mediana de las 5 ON bullet que vencen en 4 a 6 años (banda p25 a p75: 6,13% a 6,53%), con precios de mercado del 13-11-2026. La curva completa sube con el plazo: 3,57% a 1 año, 4,34% a 2 años, 5,23% a 3 años, 6,26% a 5 años.
 

@@ -7,8 +7,8 @@ HIPOTESIS
 El precio del m2 decrece con la distancia al transporte, y existe un radio de
 influencia a partir del cual el beneficio se diluye.
 
-METODO (declarado desde la version inicial)
----------------------------------------
+METODO (declarado antes de estimar)
+-----------------------------------
 Regresion de log(USD/m2) sobre la distancia, CON EFECTOS FIJOS DE BARRIO. Sin
 el barrio, la distancia mide centralidad: los barrios centrales son caros y
 estan cerca de todo. Con el barrio fijo, la comparacion es entre avisos del

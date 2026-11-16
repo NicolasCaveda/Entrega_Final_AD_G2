@@ -149,7 +149,7 @@ BARRIOS_CABA = [
 ]
 # Grafias oficiales alternativas que usan las fuentes externas. Son pocas
 # porque las tres usan nombres oficiales; los alias de portal ("palermo soho")
-# no aparecen aca y por eso no se copio el normalizador de la version inicial.
+# no aparecen aca y por eso no hace falta el normalizador de limpieza.py.
 ALIAS = {
     "boca": "la boca",
     "paternal": "la paternal",

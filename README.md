@@ -67,9 +67,10 @@ texto.
 | `data/raw/` | `dataset_maestro.csv`: el relevamiento de RE/MAX, sin modificar |
 | `data/external/` | Tablas fechadas de las fuentes externas, capas espaciales y la curva de ON |
 | `data/processed/` | `dataset_analitico.csv` (la matriz final), los reportes de cada script y el diccionario de datos |
-| `data/reference/` | La revisión a mano de las listas y el ranking de barrios de la versión inicial |
+| `data/reference/` | La revisión a mano de las listas de la decisión |
 | `informe/` | El informe de hallazgos (lo genera `reporte.py`) y el catálogo de fuentes externas |
 | `tablero/` | El tablero en Streamlit |
+| `capturas/` | Las capturas de las cinco pestañas del tablero |
 | `simulador/` | El simulador: la página autocontenida y su versión por consola |
 | `graficos/` | Los gráficos que guardan los notebooks |
 
@@ -110,6 +111,19 @@ qué fecha se relevaron, y muestra siempre tres limitaciones: son precios de pub
 es una sola inmobiliaria, y cada rentabilidad es una banda. La barra lateral tiene los
 filtros (presupuesto, tipo, comuna, barrio, ambientes, superficie, antigüedad y métrica)
 y la vara de retorno, que es una referencia fija y no un filtro.
+
+### Capturas
+
+Las cinco pestañas con los filtros por defecto (departamentos dentro del presupuesto),
+tomadas del tablero corriendo sobre el dataset versionado. Están en [`capturas/`](capturas/).
+
+| Pestaña | Captura |
+|---|---|
+| ¿Conviene comprar? | [![¿Conviene comprar?](capturas/01_conviene_comprar.png)](capturas/01_conviene_comprar.png) |
+| ¿Dónde? | [![¿Dónde?](capturas/02_donde.png)](capturas/02_donde.png) |
+| ¿Qué comprar? | [![¿Qué comprar?](capturas/03_que_comprar.png)](capturas/03_que_comprar.png) |
+| ¿Tradicional o temporal? | [![¿Tradicional o temporal?](capturas/04_tradicional_o_temporal.png)](capturas/04_tradicional_o_temporal.png) |
+| Supuestos y alcance | [![Supuestos y alcance](capturas/05_supuestos_y_alcance.png)](capturas/05_supuestos_y_alcance.png) |
 
 ### Cómo abrirlo
 
@@ -324,6 +338,25 @@ liquidez) y dos extremos.
 - **Un corte temporal único**: el relevamiento es de agosto de 2026.
 - **Asociación, no causalidad**: los tests y las primas muestran relaciones, no qué las
   provoca.
+
+### Qué haría falta para operarlo
+
+Esto es un prototipo analítico, no un sistema en operación. Para usarlo de forma
+continua faltaría:
+
+- **Relevar de nuevo y con frecuencia**: los avisos son de un solo corte y las
+  publicaciones se dan de baja. Cada relevamiento nuevo exige volver a correr el
+  pipeline completo, reentrenar el modelo de alquiler y recalibrar su banda.
+- **Actualizar los supuestos fechados**: tipo de cambio, Ley Tarifaria, costos de
+  entrada y de refacción, y la curva de ON (`curva_on.py --actualizar`). Los términos de
+  las ON están transcriptos a mano y hay que revisarlos cuando se emiten o rescatan.
+- **Repetir la revisión a mano**: las listas cambian con cada corrida, y
+  `data/reference/revision_listas.csv` vale solo para los avisos de este relevamiento.
+- **Sumar fuentes**: otros portales, para que el resultado no dependa de una sola
+  inmobiliaria, y precios de cierre para medir la distancia con los de publicación.
+- **Automatizar y vigilar**: hoy el pipeline se corre a mano, paso por paso. Haría falta
+  programarlo, correr los tests en cada actualización y avisar cuando la cobertura de la
+  banda se aleje de su objetivo.
 
 ---
 

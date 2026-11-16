@@ -1,9 +1,9 @@
 # Datos de referencia
 
-`ranking_barrios_version_inicial.csv` es una copia, sin cambios, de
-`data/processed/ranking_barrios.csv` de la versión inicial (fecha del archivo:
-19-08-2026; generado por `modelo_alquiler.py` con vacancia 8% y gastos 12%).
+`revision_listas.csv` es la revisión a mano de las listas de la decisión: una fila por
+aviso leído, con la acción (`excluir` o `alertar`) y el motivo. La aplica
+`src/decision.py`: los avisos con `excluir` salen del
+universo y los que tienen `alertar` llevan su motivo al tablero.
 
-Se versiona acá para que el notebook 03 pueda comparar el Spearman de H1
-entre entregas sin depender de una carpeta externa: el archivo por propiedad
-del que sale no se versiona en el repositorio de la versión inicial.
+Vale solo para los avisos de este relevamiento: con datos nuevos hay que repetir la
+lectura.

@@ -8,8 +8,6 @@ limitaciones, manda `GUIA_TABLERO.md`.
 > Pregunta del tablero: **Tengo entre USD 80.000 y 200.000: ¿conviene comprar para
 > alquilar, y si compro, qué?**
 
-Publicado en Streamlit Community Cloud: <https://dashboard-descriptiva-g2.streamlit.app/>
-
 ---
 
 ## 1. Paleta y estilo

@@ -2,7 +2,7 @@
 ============================================================================
 ALQUILER TRADICIONAL CONTRA TEMPORAL — NETA CONTRA NETA
 ============================================================================
-Fecha: 2026-11-13 11:52
+Fecha: 2026-11-16 16:20
 Celdas barrio x dormitorios con ambos lados: 86
     con 20+ ventas y 20+ avisos activos: 47
 

@@ -11,7 +11,7 @@ salen de los percentiles 10 y 90 del alquiler.
 | Atributo | Valor |
 |---|---|
 | Grano | Un aviso publicado (`id_aviso` es clave única) |
-| Fuente primaria | API JSON pública de RE/MAX Argentina (listado `findAll` y ficha `findBySlug`), scrapeada en la versión inicial |
+| Fuente primaria | API JSON pública de RE/MAX Argentina (listado `findAll` y ficha `findBySlug`), scrapeada una sola vez |
 | Fecha de captura | 16 de agosto de 2026, hora argentina (`fecha_scraping` está en UTC y cruza al 17) |
 | Origen en disco | `data/raw/dataset_maestro.csv` (14.867 avisos × 55 columnas) |
 | Generado por | `src/limpieza.py --tc 1500` → `src/variables.py` → `src/espacial.py` → `src/kpis.py` → `src/temporal.py` → `src/decision.py` |
@@ -110,7 +110,7 @@ para su operación**: el nulo de la otra es estructural.
 | `ambientes` | Cantidad de ambientes | Entero | Conteo | RE/MAX `totalRooms` | Valores > 15 → nulo (P4); 4 imputados con la mediana de `superficie_rango` y redondeados (P9) |
 | `dormitorios` | Cantidad de dormitorios (0 = monoambiente) | Entero | Conteo | Ficha RE/MAX `bedrooms` | Valores > 12 → nulo (P4); 1 imputado con la mediana de `superficie_rango` y redondeado (P9) |
 | `banos` | Cantidad de baños | Entero | Conteo | RE/MAX `bathrooms` | Ninguna |
-| `cocheras` | Cantidad de cocheras | Entero | Conteo | Ficha RE/MAX `parkingSpaces` | Si faltaba y el texto mencionaba una cochera, el scraper de la versión inicial cargó 1 |
+| `cocheras` | Cantidad de cocheras | Entero | Conteo | Ficha RE/MAX `parkingSpaces` | Si faltaba y el texto mencionaba una cochera, el scraper cargó 1 |
 | `antiguedad_anios` | Antigüedad del edificio | Entero | Años | Ficha RE/MAX `yearBuilt` | Si viene como año: 2026 − año. Fuera de 0 a 150 → nulo (P4). 131 imputados con la mediana de barrio × `tipo_familia`, o la global (P9) |
 | `antiguedad_rango` | Tramo de antigüedad | Categórica ordinal: `a estrenar`, `1-5`, `6-15`, `16-30`, `31-50`, `50+` | Años | Derivada, `limpieza P7` | Recalculada después de imputar (P9) |
 | `es_a_estrenar` | El edificio es nuevo (antigüedad ≤ 0) | Binaria 0/1, con nulos | — | Derivada, scraper, de `yearBuilt` | Anulada junto con la antigüedad fuera de rango. **No se imputa** (131 nulos, las mismas filas con antigüedad imputada). Distinta de `estrenar`, que sale del texto |
@@ -138,7 +138,7 @@ para su operación**: el nulo de la otra es estructural.
 
 Todas salen del mismo texto: `titulo`, `descripcion` y `detalles` concatenados y
 normalizados (minúsculas, sin tildes, signos reemplazados por espacio). Reemplazan las
-dummies por subcadena de la versión inicial; la comparación está en `reporte_regex.txt`.
+dummies por subcadena del scraper; la comparación está en `reporte_regex.txt`.
 
 > **Un 0 significa "no se menciona", no "no tiene".** Un aviso que no nombra el
 > ascensor puede tenerlo igual.
@@ -238,11 +238,11 @@ gastos del propietario que son de cada propiedad: 10,24% iguales para todas
 | `n_alq_barrio` | Alquileres de entrenamiento en el barrio de la propiedad | Entero | Conteo | Derivada, `kpis.py` | 0 si el barrio no tiene alquileres |
 | `estimacion_confiable` | 1 si el barrio tiene al menos 10 alquileres | Binaria 0/1 | — | Derivada, `kpis.py` | `n_alq_barrio ≥ 10` (`MIN_ALQ_BARRIO`). 9.203 de 10.749 ventas en 1. Por debajo, el modelo extrapola desde otros barrios. **Los resúmenes de KPIs filtran por esta columna** |
 | `rent_bruta_pct` | **KPI 1**: rentabilidad bruta anual | Decimal | % anual | Derivada, `kpis.py` | `alquiler_est_usd_mes × 12 / venta_usd × 100`, a 2 decimales |
-| `rent_neta_pct` | **KPI 2**: rentabilidad neta anual | Decimal | % anual | Derivada, `kpis.py` | `rent_bruta_pct × (1 − 0,0588) × (1 − gastos_pct / 100)`, a 2 decimales. Las expensas ordinarias no se descuentan: las paga el inquilino. Hasta la versión anterior los gastos eran 14,04% para todas |
+| `rent_neta_pct` | **KPI 2**: rentabilidad neta anual | Decimal | % anual | Derivada, `kpis.py` | `rent_bruta_pct × (1 − 0,0588) × (1 − gastos_pct / 100)`, a 2 decimales. Las expensas ordinarias no se descuentan: las paga el inquilino. Con gastos planos serían 14,04% para todas (escenario de la sensibilidad) |
 | `meses_repago` | **KPI 3**: meses de alquiler para recuperar el precio | Entero | Meses | Derivada, `kpis.py` | `venta_usd / alquiler_est_usd_mes`, redondeado. Recupero simple: sin descuento, sin valor residual, sin inflación |
 | `alquiler_p10_usd_mes` | Percentil 10 del alquiler de la propiedad | Decimal | USD/mes | Derivada, `kpis.py` (`modelo_alquiler.banda_cuantilica`) | Regresión cuantílica lineal con las predictoras del Ridge, calibrada por grupo de evidencia del barrio (CQR). Cubre el 81,6% de los alquileres observados fuera de muestra, objetivo 80% |
 | `alquiler_p90_usd_mes` | Percentil 90 del alquiler de la propiedad | Decimal | USD/mes | Ídem | Ídem |
-| `rent_bruta_min` | **KPI 4**: extremo inferior de la banda de incertidumbre | Decimal | % anual | Derivada, `kpis.py` | `alquiler_p10_usd_mes × 12 / venta_usd × 100`. Hasta la versión anterior era la bruta menos el error mediano del tramo, una banda que cubría el 50% |
+| `rent_bruta_min` | **KPI 4**: extremo inferior de la banda de incertidumbre | Decimal | % anual | Derivada, `kpis.py` | `alquiler_p10_usd_mes × 12 / venta_usd × 100`. La alternativa simple (la bruta menos el error mediano del tramo) cubre solo el 50% |
 | `rent_bruta_max` | **KPI 4**: extremo superior de la banda | Decimal | % anual | Derivada, `kpis.py` | `alquiler_p90_usd_mes × 12 / venta_usd × 100` |
 
 ### 8.1 Costos del propietario y TIR (`kpis.py` y `costos.py`)
