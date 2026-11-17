@@ -650,7 +650,8 @@ def hallazgos_readme(r: dict) -> str:
         f"{pct(r['tv_equil_med'])} con gestión tercerizada y {pct(r['tv_equil_auto'])} autogestionado.",
         f"6. **La cercanía al transporte ya está en el precio del barrio**: hasta 1 km no se paga; más allá, "
         f"un descuento de {pct(abs(r['h2_escalon_pct']))} que es exploratorio (H2, reformulada).",
-        f"7. **{pct(r['cred_ventas'], 0)} de la oferta se declara apta para crédito**, sin pagar más por m². "
+        f"7. **{pct(r['cred_ventas'], 0)} de la oferta se declara apta para crédito, y la cercanía a un "
+        f"espacio verde se paga poco.** "
         f"Estar cerca de una plaza no se distingue en el precio; de un parque, "
         f"{pct(pq['valor'], 1, True)} en departamentos (IC 95% {ic(pq['ic'], 1, '%')}), evidencia débil.",
     ])
