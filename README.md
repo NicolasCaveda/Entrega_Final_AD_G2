@@ -31,7 +31,7 @@ Las cifras de esta sección las escribe `py src/reporte.py` a partir de
 4. **El barrio es la palanca más fuerte**: cada USD 500 más de m² del barrio resta 0,98 pp de rentabilidad bruta (H1). Las torres nuevas con amenities cuestan 33% más por m² y se alquilan solo 17% más.
 5. **El temporal no rescata la inversión** salvo autogestionado: necesita una ocupación de 65,5% con gestión tercerizada y 51,7% autogestionado.
 6. **La cercanía al transporte ya está en el precio del barrio**: hasta 1 km no se paga; más allá, un descuento de 6,7% que es exploratorio (H2, reformulada).
-7. **24% de la oferta se declara apta para crédito**, sin pagar más por m². Estar cerca de una plaza no se distingue en el precio; de un parque, +5,9% en departamentos (IC 95% [0,5%, 11,7%]), evidencia débil.
+7. **24% de la oferta se declara apta para crédito, y la cercanía a un espacio verde se paga poco.** Estar cerca de una plaza no se distingue en el precio; de un parque, +5,9% en departamentos (IC 95% [0,5%, 11,7%]), evidencia débil.
 
 <!-- hallazgos:fin -->
 
@@ -39,7 +39,7 @@ Las cifras de esta sección las escribe `py src/reporte.py` a partir de
 
 ## Seguimiento de la devolución
 
-La única sección del repositorio que habla del proceso de corrección. Cada observación
+Cada observación
 se resolvió donde estaba el problema (datos, código, modelo o tablero), no solo en el
 texto.
 
